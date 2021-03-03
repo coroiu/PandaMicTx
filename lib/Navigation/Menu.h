@@ -7,6 +7,7 @@
 #include "Menu.h"
 #include "MenuItem.h"
 #include "MenuCommand.h"
+#include "MenuInfo.h"
 
 #define KEY_UP 0
 #define KEY_DOWN 1
@@ -56,7 +57,9 @@ public:
   {
     if (key == KEY_UP)
     {
-      selectedItem = (selectedItem - 1) % menuItems.size();
+      --selectedItem;
+      if (selectedItem < 0)
+        selectedItem = menuItems.size() - 1;
     }
     else if (key == KEY_DOWN)
     {
@@ -77,9 +80,16 @@ public:
     menuItems.push_back(command);
   }
 
+  MenuInfo* info(string label) {
+    MenuInfo *info = new MenuInfo(label);
+    menuItems.push_back(info);
+    return info;
+  }
+
 private:
   void drawHeader()
   {
+    headerCanvas.fillScreen(0);
     headerCanvas.setRotation(3);
     headerCanvas.setCursor(0, CHAR_HEIGHT);
     headerCanvas.print(name.c_str());
@@ -89,6 +99,7 @@ private:
 
   void drawMenu()
   {
+    mainCanvas.fillScreen(0);
     mainCanvas.setCursor(0, CHAR_HEIGHT);
 
     for (int i(0); i < menuItems.size(); ++i)
@@ -106,7 +117,6 @@ private:
 
       mainCanvas.println(item->label.c_str());
     }
-    mainCanvas.println(selectedItem);
   }
 
   void drawCanvasToGfx(GFXcanvas1 *canvas, int x, int y)
