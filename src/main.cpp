@@ -4,7 +4,9 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Navigation.h>
+#include <BluetoothA2DPSource.h>
 
+// TaoTronics TT-BA08
 #define EASYBUTTON_FUNCTIONAL_SUPPORT 1
 #define AUDIO_OUT_PIN DAC1
 #define MICROPHONE_PIN A11
@@ -25,13 +27,12 @@ EasyButton buttonC(BUTTON_C);
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 
+void testConnect();
+
 void setup()
 {
   pinMode(MICROPHONE_PIN, INPUT);
   pinMode(BATTERY_PIN, INPUT);
-  pinMode(BUTTON_A, INPUT_PULLUP);
-  pinMode(BUTTON_B, INPUT_PULLUP);
-  pinMode(BUTTON_C, INPUT_PULLUP);
   pinMode(BUILTIN_LED, OUTPUT);
 
   buttonA.begin();
@@ -54,11 +55,13 @@ void setup()
 
   Menu *mainMenu = navigation.menu();
   Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
-  Menu *menu2 = mainMenu->subMenu("Menu2", "Menu number 2");
-  analogInputInfo = mainMenu->info("ADC: ?v");
+  mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
+  mainMenu->command("Connect to test device", testConnect);
+  // analogInputInfo = mainMenu->info("ADC: ?v");
   batteryInfo = mainMenu->info("Battery: ?v");
 
   buttonA.onPressed([]() { navigation.input(KEY_UP); });
+  buttonB.onPressed([]() { navigation.input(KEY_SELECT); });
   buttonC.onPressed([]() { navigation.input(KEY_DOWN); });
 }
 
@@ -93,4 +96,8 @@ void loop()
 
   delay(10);
   display.display();
+}
+
+void testConnect() {
+
 }

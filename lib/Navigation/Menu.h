@@ -38,7 +38,7 @@ public:
   {
     headerCanvas.setFont(&TomThumb);
     mainCanvas.setFont(&TomThumb);
-    command("Back");
+    command("Back", [&]() { this->exit(); });
   }
 
   void draw()
@@ -65,6 +65,10 @@ public:
     {
       selectedItem = (selectedItem + 1) % menuItems.size();
     }
+    else if (key == KEY_SELECT) 
+    {
+      menuItems[selectedItem]->activate();
+    }
   }
 
   Menu *subMenu(string name, string label)
@@ -74,9 +78,9 @@ public:
     return menu;
   }
 
-  void command(string label) 
+  void command(string label, callback_t callback) 
   {
-    MenuCommand *command = new MenuCommand(label);
+    MenuCommand *command = new MenuCommand(label, callback);
     menuItems.push_back(command);
   }
 
@@ -85,6 +89,8 @@ public:
     menuItems.push_back(info);
     return info;
   }
+
+  void activate() {}
 
 private:
   void drawHeader()
@@ -122,6 +128,11 @@ private:
   void drawCanvasToGfx(GFXcanvas1 *canvas, int x, int y)
   {
     gfx->drawBitmap(x, y, canvas->getBuffer(), canvas->width(), canvas->height(), 1, 0);
+  }
+
+  void exit()
+  {
+
   }
 };
 

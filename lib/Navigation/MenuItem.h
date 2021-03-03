@@ -11,6 +11,8 @@ class MenuItem {
     string label;
     string name;
 
+    virtual void activate() = 0;
+
   protected: 
     MenuItem(string label, string name) : label(label), name(name) 
     {

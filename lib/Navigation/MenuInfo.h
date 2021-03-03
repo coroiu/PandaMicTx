@@ -7,6 +7,8 @@ class MenuInfo : public MenuItem
 {
 public:
   MenuInfo(string label) : MenuItem(label, "") {}
+
+  void activate() {}
 };
 
 #endif
