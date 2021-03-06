@@ -4,7 +4,7 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <Navigation.h>
-#include <BluetoothA2DPSource.h>
+#include <BluetoothClient.h>
 
 // TaoTronics TT-BA08
 #define EASYBUTTON_FUNCTIONAL_SUPPORT 1
@@ -15,10 +15,13 @@
 #define BUTTON_B 32
 #define BUTTON_C 14
 
+#define LOG_TAG "main"
+
 const float ADC_MODIFIER = 3.3 / 4095;
 const float BATTERY_MODIFIER = 2 * (3.45 / 4095);
 Adafruit_SSD1306 display(128, 32, &Wire);
 Navigation navigation(&display);
+// BluetoothClient bt;
 
 EasyButton buttonA(BUTTON_A);
 EasyButton buttonB(BUTTON_B);
@@ -27,8 +30,11 @@ EasyButton buttonC(BUTTON_C);
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 
+DiscoverySession session;
+
 void redraw();
-void testConnect();
+void startScan();
+void stopScan();
 
 void setup()
 {
@@ -54,9 +60,10 @@ void setup()
   display.display();
 
   Menu *mainMenu = navigation.menu();
-  Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
+  mainMenu->command("Start scan", startScan);
+  mainMenu->command("Stop scan", stopScan);
   mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
-  mainMenu->command("Connect to test device", testConnect);
+  // Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
   // analogInputInfo = mainMenu->info("ADC: ?v");
   batteryInfo = mainMenu->info("Battery: ?v");
 
@@ -67,7 +74,7 @@ void setup()
   redraw();
 }
 
-void redraw() 
+void redraw()
 {
   display.clearDisplay();
   navigation.draw();
@@ -110,16 +117,47 @@ void loop()
   yield();
 }
 
-extern const uint8_t StarWars30_raw[];
-extern const unsigned int StarWars30_raw_len;
+void startScan()
+{
+  ESP_LOGD(LOG_TAG, "Running test command...");
 
-BluetoothA2DPSource a2dp_source;
-SoundData *data = new OneChannelSoundData((int16_t *)StarWars30_raw, StarWars30_raw_len / 2);
+  if (!bluetooth.isEnabled())
+  {
+    bool status;
+    status = bluetooth.enable();
 
-void testConnect() {
-  Serial.println("Connection test starting");
-  a2dp_source.setPinCode("0000");
-  a2dp_source.start("TaoTronics TT-BA08");
-  a2dp_source.writeData(data);
-  Serial.println("Connection test started?");
+    if (status)
+    {
+      ESP_LOGD(LOG_TAG, "Successfully turned on bluetooth.");
+    }
+    else
+    {
+      ESP_LOGW(LOG_TAG, "Failed to turn on bluetooth.");
+      return;
+    }
+  }
+
+  // DiscoverySession session;
+  session.start();
+  // delay(25000);
+  // session.start();
+  // delay(25000);
+
+  // delay(5000);
+  // status = bluetooth.disable();
+
+  // if (status)
+  // {
+  //   ESP_LOGD(LOG_TAG, "Successfully turned off bluetooth.");
+  // }
+  // else
+  // {
+  //   ESP_LOGW(LOG_TAG, "Failed to turn off bluetooth.");
+  //   return;
+  // }
+}
+
+void stopScan()
+{
+  session.stop();
 }
