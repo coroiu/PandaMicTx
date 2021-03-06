@@ -1,0 +1,25 @@
+#include <Arduino.h>
+#include <EasyButton.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <Navigation.h>
+#include <BluetoothA2DPSource.h>
+
+extern const uint8_t StarWars30_raw[];
+extern const unsigned int StarWars30_raw_len;
+
+BluetoothA2DPSource a2dp_source;
+//SoundData *data = new TwoChannelSoundData((Channels*)StarWars10_raw,StarWars10_raw_len/4);
+SoundData *data = new OneChannelSoundData((int16_t *)StarWars30_raw, StarWars30_raw_len / 2);
+
+void setup()
+{
+  Serial.begin(9600);
+  a2dp_source.start("TaoTronics TT-BA08");
+  a2dp_source.writeData(data);
+}
+
+void loop()
+{
+}

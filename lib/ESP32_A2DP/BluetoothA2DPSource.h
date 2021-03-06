@@ -41,7 +41,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <vector> 
+#include <vector>
 
 #include "esp32-hal-log.h"
 #include "esp32-hal-bt.h"

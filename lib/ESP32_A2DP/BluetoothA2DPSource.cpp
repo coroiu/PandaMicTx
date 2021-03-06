@@ -110,7 +110,7 @@ extern "C" int32_t ccall_get_data_default(uint8_t *data, int32_t len) {
 BluetoothA2DPSource::BluetoothA2DPSource() {
     ESP_LOGD(APP, "x%x, ", __func__);
     self_BluetoothA2DPSource = this;
-    this->ssp_enabled = false;
+    this->ssp_enabled = true;
     this->pin_type = ESP_BT_PIN_TYPE_VARIABLE;
     
     // default pin code

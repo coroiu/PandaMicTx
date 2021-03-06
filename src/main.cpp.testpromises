@@ -1,0 +1,32 @@
+#include <Arduino.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <esp_log.h>
+#include "promise_test.h"
+
+#define PTAG "promise-test"
+PromiseTest promiseTest_1;
+PromiseTest promiseTest_2;
+
+void setup()
+{
+  Serial.begin(9600);
+  promiseTest_1.wait_for_num(5)
+      ->then([&](int result) {
+        ESP_LOGI(PTAG, "num1 arrived %d", result);
+        return promiseTest_2.wait_for_num(10);
+      });
+      // ->then([](int result) {
+      //   ESP_LOGI(PTAG, "num2 arrived %d", result);
+      // });
+  // ESP_LOGI(PTAG, "num arrived %d", n);
+}
+
+void loop()
+{
+  promiseTest_1.increment();
+  promiseTest_2.increment();
+  ESP_LOGI(PTAG, "Incremented");
+  delay(1000);
+}

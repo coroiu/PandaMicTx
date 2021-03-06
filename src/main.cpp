@@ -27,6 +27,7 @@ EasyButton buttonC(BUTTON_C);
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 
+void redraw();
 void testConnect();
 
 void setup()
@@ -41,7 +42,6 @@ void setup()
 
   Serial.begin(9600);
   Serial.println("OLED FeatherWing test");
-
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
 
   display.display();
@@ -60,9 +60,18 @@ void setup()
   // analogInputInfo = mainMenu->info("ADC: ?v");
   batteryInfo = mainMenu->info("Battery: ?v");
 
-  buttonA.onPressed([]() { navigation.input(KEY_UP); });
-  buttonB.onPressed([]() { navigation.input(KEY_SELECT); });
-  buttonC.onPressed([]() { navigation.input(KEY_DOWN); });
+  buttonA.onPressed([]() { navigation.input(KEY_UP); redraw(); });
+  buttonB.onPressed([]() { navigation.input(KEY_SELECT); redraw(); });
+  buttonC.onPressed([]() { navigation.input(KEY_DOWN); redraw(); });
+
+  redraw();
+}
+
+void redraw() 
+{
+  display.clearDisplay();
+  navigation.draw();
+  display.display();
 }
 
 void loop()
@@ -94,10 +103,23 @@ void loop()
   //   dacWrite(AUDIO_OUT_PIN, analogRead(MICROPHONE_PIN) / 16);
   // }
 
-  delay(10);
-  display.display();
+  // delay(10);
+  // display.display();
+
+  vTaskDelay(100);
+  yield();
 }
 
-void testConnect() {
+extern const uint8_t StarWars30_raw[];
+extern const unsigned int StarWars30_raw_len;
 
+BluetoothA2DPSource a2dp_source;
+SoundData *data = new OneChannelSoundData((int16_t *)StarWars30_raw, StarWars30_raw_len / 2);
+
+void testConnect() {
+  Serial.println("Connection test starting");
+  a2dp_source.setPinCode("0000");
+  a2dp_source.start("TaoTronics TT-BA08");
+  a2dp_source.writeData(data);
+  Serial.println("Connection test started?");
 }
