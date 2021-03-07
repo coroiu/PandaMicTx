@@ -77,7 +77,6 @@ public:
       return false;
     }
 
-    DiscoverySession::ActiveSession = nullptr;
     keepActive = false;
     esp_err_t err = esp_bt_gap_cancel_discovery();
     ESP_ERROR_CHECK(err);
@@ -212,71 +211,73 @@ private:
         }
         else
         {
+          DiscoverySession::ActiveSession = nullptr;
           ESP_LOGD(GAP_TAG, "Device discovery stopped.");
         }
       }
     }
+  }
 
-    static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
+  static char *bda2str(esp_bd_addr_t bda, char *str, size_t size)
+  {
+    if (bda == NULL || str == NULL || size < 18)
     {
-      if (bda == NULL || str == NULL || size < 18)
-      {
-        return NULL;
-      }
-
-      uint8_t *p = bda;
-      sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-              p[0], p[1], p[2], p[3], p[4], p[5]);
-      return str;
+      return NULL;
     }
 
-    // Try to extract device name from the Bluetooth Extended Inquiry Response.
-    static bool get_name_from_eir(uint8_t * eir, char *bdname, uint8_t *bdname_len)
+    uint8_t *p = bda;
+    sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
+            p[0], p[1], p[2], p[3], p[4], p[5]);
+    return str;
+  }
+
+  // Try to extract device name from the Bluetooth Extended Inquiry Response.
+  static bool get_name_from_eir(uint8_t *eir, char *bdname, uint8_t *bdname_len)
+  {
+
+    uint8_t *rmt_bdname = NULL;
+    uint8_t rmt_bdname_len = 0;
+
+    if (!eir)
     {
-
-      uint8_t *rmt_bdname = NULL;
-      uint8_t rmt_bdname_len = 0;
-
-      if (!eir)
-      {
-        return false;
-      }
-
-      // Try to get long name
-      rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, &rmt_bdname_len);
-      if (!rmt_bdname)
-      {
-        // Try to get short name
-        rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME, &rmt_bdname_len);
-      }
-
-      if (rmt_bdname)
-      {
-        // If the name is larger that the max (not sure why this length)
-        if (rmt_bdname_len > ESP_BT_GAP_MAX_BDNAME_LEN)
-        {
-          rmt_bdname_len = ESP_BT_GAP_MAX_BDNAME_LEN;
-        }
-
-        // If we were provided with an output variable
-        if (bdname)
-        {
-          // Copy the name from the EIR to the variable, making sure to null-terminate it.
-          memcpy(bdname, rmt_bdname, rmt_bdname_len);
-          bdname[rmt_bdname_len] = '\0';
-        }
-        if (bdname_len)
-        {
-          // Also output the length
-          *bdname_len = rmt_bdname_len;
-        }
-        return true;
-      }
-
       return false;
     }
-  };
 
-  DiscoverySession *DiscoverySession::ActiveSession;
+    // Try to get long name
+    rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_CMPL_LOCAL_NAME, &rmt_bdname_len);
+    if (!rmt_bdname)
+    {
+      // Try to get short name
+      rmt_bdname = esp_bt_gap_resolve_eir_data(eir, ESP_BT_EIR_TYPE_SHORT_LOCAL_NAME, &rmt_bdname_len);
+    }
+
+    if (rmt_bdname)
+    {
+      // If the name is larger that the max (not sure why this length)
+      if (rmt_bdname_len > ESP_BT_GAP_MAX_BDNAME_LEN)
+      {
+        rmt_bdname_len = ESP_BT_GAP_MAX_BDNAME_LEN;
+      }
+
+      // If we were provided with an output variable
+      if (bdname)
+      {
+        // Copy the name from the EIR to the variable, making sure to null-terminate it.
+        memcpy(bdname, rmt_bdname, rmt_bdname_len);
+        bdname[rmt_bdname_len] = '\0';
+      }
+      if (bdname_len)
+      {
+        // Also output the length
+        *bdname_len = rmt_bdname_len;
+      }
+      return true;
+    }
+
+    return false;
+  }
+};
+
+DiscoverySession *DiscoverySession::ActiveSession;
 
 #endif
