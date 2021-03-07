@@ -85,6 +85,11 @@ public:
     return true;
   }
 
+  void clear()
+  {
+    devices.clear();
+  }
+
 private:
   void startInquiry()
   {
@@ -199,6 +204,7 @@ private:
           .name = bdname,
           .rssi = rssi};
       devices[deviceInfo.address.toString()] = deviceInfo;
+      this->callback(deviceInfo);
     }
     else if (event == ESP_BT_GAP_DISC_STATE_CHANGED_EVT)
     {

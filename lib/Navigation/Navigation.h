@@ -54,10 +54,12 @@ public:
   void navigateTo(Menu *menu)
   {
     stack.push(menu);
+    menu->onEnter();
   }
 
   void back()
   {
+    currentMenu()->onLeave();
     stack.pop();
   }
 

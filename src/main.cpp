@@ -5,6 +5,7 @@
 #include <Adafruit_SSD1306.h>
 #include <Navigation.h>
 #include <BluetoothClient.h>
+#include "PairMenu.h"
 
 // TaoTronics TT-BA08
 #define EASYBUTTON_FUNCTIONAL_SUPPORT 1
@@ -35,6 +36,7 @@ DiscoverySession session;
 void redraw();
 void startScan();
 void stopScan();
+void activateBluetooth();
 
 void setup()
 {
@@ -60,30 +62,22 @@ void setup()
   display.display();
 
   Menu *mainMenu = navigation.menu();
+  mainMenu->custom([](Adafruit_GFX *gfx) { return new PairMenu(gfx); });
   mainMenu->command("Start scan", startScan);
   mainMenu->command("Stop scan", stopScan);
   mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
-  Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
-  mainMenu->subMenu("Menu2", "Menu number 2");
-  mainMenu->subMenu("Menu3", "Menu number 3");
-  mainMenu->subMenu("Menu4", "Menu number 4");
+  // Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
+  // mainMenu->subMenu("Menu2", "Menu number 2");
+  // mainMenu->subMenu("Menu3", "Menu number 3");
+  // mainMenu->subMenu("Menu4", "Menu number 4");
   // analogInputInfo = mainMenu->info("ADC: ?v");
   batteryInfo = mainMenu->info("Battery: ?v");
-
-  Menu *menu11 = menu1->subMenu("M1-1", "Sub menu 1");
-  menu1->subMenu("M1-2", "Sub menu 2");
-  menu1->subMenu("M1-3", "Sub menu 3");
-  menu1->subMenu("M1-4", "Sub menu 4");
-  menu1->subMenu("M1-5", "Sub menu 5");
-
-  menu11->subMenu("M1-1-1", "Sub sub menu 1");
-  menu11->subMenu("M1-1-2", "Sub sub menu 2");
-  menu11->subMenu("M1-1-3", "Sub sub menu 3");
-  menu11->subMenu("M1-1-4", "Sub sub menu 4");
 
   buttonA.onPressed([]() { navigation.input(KEY_UP); });
   buttonB.onPressed([]() { navigation.input(KEY_SELECT); });
   buttonC.onPressed([]() { navigation.input(KEY_DOWN); });
+
+  activateBluetooth();
 }
 
 void redraw()
@@ -128,10 +122,9 @@ void loop()
   yield();
 }
 
-void startScan()
+void activateBluetooth()
 {
-  ESP_LOGD(LOG_TAG, "Running test command...");
-
+  ESP_LOGD(LOG_TAG, "Activating bluetooth...");
   if (!bluetooth.isEnabled())
   {
     bool status;
@@ -147,6 +140,11 @@ void startScan()
       return;
     }
   }
+}
+
+void startScan()
+{
+  ESP_LOGD(LOG_TAG, "Running test command...");
 
   // DiscoverySession session;
   session.start();

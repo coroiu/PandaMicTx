@@ -98,6 +98,7 @@ public:
   {
     Menu *menu = new Menu(gfx, label, name);
     menuItems.push_back(menu);
+    notifyChanged();
     return menu;
   }
 
@@ -105,19 +106,39 @@ public:
   {
     MenuCommand *command = new MenuCommand(label, callback);
     menuItems.push_back(command);
+    notifyChanged();
   }
 
   MenuInfo *info(string label)
   {
     MenuInfo *info = new MenuInfo(label);
     menuItems.push_back(info);
+    notifyChanged();
     return info;
+  }
+
+  void custom(std::function<Menu *(Adafruit_GFX *)> factory)
+  {
+    Menu *menu = factory(gfx);
+    menuItems.push_back(menu);
+    notifyChanged();
   }
 
   NavigationCommand *activate()
   {
     return new NavigateToCommand(this);
   }
+
+  void clear()
+  {
+    menuItems.clear();
+    info("Back");
+    int scrollPosition = 0;
+    int selectedItem = 0;
+  }
+
+  virtual void onEnter() {}
+  virtual void onLeave() {}
 
 protected:
   void notifyChanged()
