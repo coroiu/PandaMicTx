@@ -70,6 +70,17 @@ void setup()
   // analogInputInfo = mainMenu->info("ADC: ?v");
   batteryInfo = mainMenu->info("Battery: ?v");
 
+  Menu *menu11 = menu1->subMenu("M1-1", "Sub menu 1");
+  menu1->subMenu("M1-2", "Sub menu 2");
+  menu1->subMenu("M1-3", "Sub menu 3");
+  menu1->subMenu("M1-4", "Sub menu 4");
+  menu1->subMenu("M1-5", "Sub menu 5");
+
+  menu11->subMenu("M1-1-1", "Sub sub menu 1");
+  menu11->subMenu("M1-1-2", "Sub sub menu 2");
+  menu11->subMenu("M1-1-3", "Sub sub menu 3");
+  menu11->subMenu("M1-1-4", "Sub sub menu 4");
+
   buttonA.onPressed([]() { navigation.input(KEY_UP); redraw(); });
   buttonB.onPressed([]() { navigation.input(KEY_SELECT); redraw(); });
   buttonC.onPressed([]() { navigation.input(KEY_DOWN); redraw(); });
