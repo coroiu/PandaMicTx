@@ -27,17 +27,20 @@ class Menu : public MenuItem
   Adafruit_GFX *gfx;
   GFXcanvas1 headerCanvas;
   GFXcanvas1 mainCanvas;
+  int mainCanvasRows;
+  int scrollPosition;
 
   int selectedItem;
-  vector<MenuItem*> menuItems;
+  vector<MenuItem *> menuItems;
 
 public:
   Menu(Adafruit_GFX *gfx, string label) : Menu(gfx, label, ""){};
 
-  Menu(Adafruit_GFX *gfx, string label, string name) : gfx(gfx), headerCanvas(HEADER_WIDTH, gfx->height()), mainCanvas(gfx->width() - HEADER_WIDTH, gfx->width()), MenuItem(label, name)
+  Menu(Adafruit_GFX *gfx, string label, string name) : gfx(gfx), headerCanvas(HEADER_WIDTH, gfx->height()), mainCanvas(gfx->width() - HEADER_WIDTH, gfx->height()), MenuItem(label, name)
   {
     headerCanvas.setFont(&TomThumb);
     mainCanvas.setFont(&TomThumb);
+    mainCanvasRows = mainCanvas.height() / CHAR_HEIGHT;
     command("Back", [&]() { this->exit(); });
   }
 
@@ -65,10 +68,13 @@ public:
     {
       selectedItem = (selectedItem + 1) % menuItems.size();
     }
-    else if (key == KEY_SELECT) 
+    else if (key == KEY_SELECT)
     {
       menuItems[selectedItem]->activate();
     }
+
+    if (!isItemVisible(selectedItem))
+      scrollToItem(selectedItem);
   }
 
   Menu *subMenu(string name, string label)
@@ -78,13 +84,14 @@ public:
     return menu;
   }
 
-  void command(string label, callback_t callback) 
+  void command(string label, callback_t callback)
   {
     MenuCommand *command = new MenuCommand(label, callback);
     menuItems.push_back(command);
   }
 
-  MenuInfo* info(string label) {
+  MenuInfo *info(string label)
+  {
     MenuInfo *info = new MenuInfo(label);
     menuItems.push_back(info);
     return info;
@@ -105,24 +112,54 @@ private:
 
   void drawMenu()
   {
-    mainCanvas.fillScreen(0);
-    mainCanvas.setCursor(0, CHAR_HEIGHT);
+    GFXcanvas1 canvas(mainCanvas.width(), getItemPosition(menuItems.size()));
+    canvas.setFont(&TomThumb);
 
     for (int i(0); i < menuItems.size(); ++i)
     {
-      MenuItem* item = menuItems[i];
+      MenuItem *item = menuItems[i];
 
-      if (i == selectedItem) 
+      if (i == selectedItem)
       {
-        mainCanvas.print("> ");
-      } 
-      else 
+        canvas.print("> ");
+      }
+      else
       {
-        mainCanvas.setCursor(mainCanvas.getCursorX() + CHAR_WIDTH * 2, mainCanvas.getCursorY());
+        canvas.setCursor(canvas.getCursorX() + CHAR_WIDTH * 2, canvas.getCursorY());
       }
 
-      mainCanvas.println(item->label.c_str());
+      canvas.println(item->label.c_str());
     }
+
+    mainCanvas.fillScreen(0);
+    mainCanvas.setCursor(0, CHAR_HEIGHT);
+    mainCanvas.drawBitmap(0, -scrollPosition, canvas.getBuffer(), canvas.width(), canvas.height(), 1, 0);
+  }
+
+  void exit()
+  {
+  }
+
+  void scrollToItem(int item)
+  {
+    int itemPosition = getItemPosition(item);
+
+    if (itemPosition + CHAR_HEIGHT > scrollPosition + mainCanvas.height())
+    {
+      scrollPosition = itemPosition - mainCanvas.height() + CHAR_HEIGHT + 2;
+    }
+    else
+    {
+      scrollPosition = itemPosition;
+    }
+    // scrollPosition = itemPosition;
+  }
+
+  bool isItemVisible(int item)
+  {
+    int itemPosition = getItemPosition(item + 1);
+    // ESP_LOGD("", "itemPosition: %d, scrollPosition: %d, mainCanvasHeight: %d", itemPosition, scrollPosition, mainCanvas.height());
+    return itemPosition - CHAR_HEIGHT > scrollPosition && itemPosition < scrollPosition + mainCanvas.height();
   }
 
   void drawCanvasToGfx(GFXcanvas1 *canvas, int x, int y)
@@ -130,9 +167,9 @@ private:
     gfx->drawBitmap(x, y, canvas->getBuffer(), canvas->width(), canvas->height(), 1, 0);
   }
 
-  void exit()
+  static int getItemPosition(int item)
   {
-
+    return (CHAR_HEIGHT + 1) * item;
   }
 };
 

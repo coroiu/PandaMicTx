@@ -63,7 +63,10 @@ void setup()
   mainMenu->command("Start scan", startScan);
   mainMenu->command("Stop scan", stopScan);
   mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
-  // Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
+  Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
+  mainMenu->subMenu("Menu2", "Menu number 2");
+  mainMenu->subMenu("Menu3", "Menu number 3");
+  mainMenu->subMenu("Menu4", "Menu number 4");
   // analogInputInfo = mainMenu->info("ADC: ?v");
   batteryInfo = mainMenu->info("Battery: ?v");
 
