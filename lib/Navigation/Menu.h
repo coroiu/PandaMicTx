@@ -8,6 +8,7 @@
 #include "MenuItem.h"
 #include "MenuCommand.h"
 #include "MenuInfo.h"
+#include "NavigationCommand.h"
 
 #define KEY_UP 0
 #define KEY_DOWN 1
@@ -27,11 +28,12 @@ class Menu : public MenuItem
   Adafruit_GFX *gfx;
   GFXcanvas1 headerCanvas;
   GFXcanvas1 mainCanvas;
-  int mainCanvasRows;
-  int scrollPosition;
 
-  int selectedItem;
+  int scrollPosition = 0;
+  int selectedItem = 0;
   vector<MenuItem *> menuItems;
+
+  bool hasChanged = true;
 
 public:
   Menu(Adafruit_GFX *gfx, string label) : Menu(gfx, label, ""){};
@@ -40,8 +42,12 @@ public:
   {
     headerCanvas.setFont(&TomThumb);
     mainCanvas.setFont(&TomThumb);
-    mainCanvasRows = mainCanvas.height() / CHAR_HEIGHT;
-    command("Back", [&]() { this->exit(); });
+    info("Back");
+  }
+
+  bool needsRedraw()
+  {
+    return hasChanged;
   }
 
   void draw()
@@ -54,10 +60,14 @@ public:
 
     drawMenu();
     drawCanvasToGfx(&mainCanvas, name.empty() ? 0 : headerCanvas.width() + CHAR_WIDTH, 0);
+
+    hasChanged = false;
   }
 
-  void input(int key)
+  NavigationCommand *input(int key)
   {
+    notifyChanged();
+
     if (key == KEY_UP)
     {
       --selectedItem;
@@ -70,11 +80,18 @@ public:
     }
     else if (key == KEY_SELECT)
     {
-      menuItems[selectedItem]->activate();
+      if (selectedItem == 0)
+      {
+        return new BackCommand();
+      }
+
+      return menuItems[selectedItem]->activate();
     }
 
     if (!isItemVisible(selectedItem))
       scrollToItem(selectedItem);
+
+    return new NopCommand();
   }
 
   Menu *subMenu(string name, string label)
@@ -97,7 +114,16 @@ public:
     return info;
   }
 
-  void activate() {}
+  NavigationCommand *activate()
+  {
+    return new NavigateToCommand(this);
+  }
+
+protected:
+  void notifyChanged()
+  {
+    hasChanged = true;
+  }
 
 private:
   void drawHeader()
@@ -152,7 +178,6 @@ private:
     {
       scrollPosition = itemPosition;
     }
-    // scrollPosition = itemPosition;
   }
 
   bool isItemVisible(int item)

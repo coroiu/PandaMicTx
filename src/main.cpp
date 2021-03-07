@@ -81,11 +81,9 @@ void setup()
   menu11->subMenu("M1-1-3", "Sub sub menu 3");
   menu11->subMenu("M1-1-4", "Sub sub menu 4");
 
-  buttonA.onPressed([]() { navigation.input(KEY_UP); redraw(); });
-  buttonB.onPressed([]() { navigation.input(KEY_SELECT); redraw(); });
-  buttonC.onPressed([]() { navigation.input(KEY_DOWN); redraw(); });
-
-  redraw();
+  buttonA.onPressed([]() { navigation.input(KEY_UP); });
+  buttonB.onPressed([]() { navigation.input(KEY_SELECT); });
+  buttonC.onPressed([]() { navigation.input(KEY_DOWN); });
 }
 
 void redraw()
@@ -101,9 +99,8 @@ void loop()
   buttonB.read();
   buttonC.read();
 
-  display.clearDisplay();
-
-  navigation.draw();
+  if (navigation.needsRedraw())
+    redraw();
 
   // display.setCursor(0, 5);
   // display.print(analogRead(BATTERY_PIN) * BATTERY_MODIFIER, 2);
@@ -127,7 +124,7 @@ void loop()
   // delay(10);
   // display.display();
 
-  vTaskDelay(100);
+  vTaskDelay(10);
   yield();
 }
 

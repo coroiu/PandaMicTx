@@ -3,20 +3,22 @@
 
 #include <iostream>
 #include "Menu.h"
+#include "NavigationCommand.h"
 
 using namespace std;
 
-class MenuItem {
-  public:
-    string label;
-    string name;
+class MenuItem
+{
+public:
+  string label;
+  string name;
 
-    virtual void activate() = 0;
+  virtual NavigationCommand *activate() = 0;
 
-  protected: 
-    MenuItem(string label, string name) : label(label), name(name) 
-    {
-    }
+protected:
+  MenuItem(string label, string name) : label(label), name(name)
+  {
+  }
 };
 
 #endif

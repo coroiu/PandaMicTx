@@ -5,6 +5,7 @@
 #include "Menu.h"
 #include "MenuItem.h"
 #include "MenuCommand.h"
+#include "NavigationCommand.h"
 
 class Navigation
 {
@@ -23,6 +24,11 @@ public:
     return &mainMenu;
   }
 
+  bool needsRedraw()
+  {
+    return currentMenu()->needsRedraw();
+  }
+
   void draw()
   {
     currentMenu()->draw();
@@ -30,7 +36,19 @@ public:
 
   void input(int key)
   {
-    currentMenu()->input(key);
+    NavigationCommand *command = currentMenu()->input(key);
+
+    if (command->commandType() == BACK_COMMAND)
+    {
+      back();
+    }
+    else if (command->commandType() == NAVIGATE_TO_COMMAND)
+    {
+      NavigateToCommand *navigateToCommand = static_cast<NavigateToCommand *>(command);
+      navigateTo(navigateToCommand->menu);
+    }
+
+    delete command;
   }
 
   void navigateTo(Menu *menu)

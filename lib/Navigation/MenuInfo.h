@@ -8,7 +8,10 @@ class MenuInfo : public MenuItem
 public:
   MenuInfo(string label) : MenuItem(label, "") {}
 
-  void activate() {}
+  NavigationCommand *activate()
+  {
+    return new NopCommand();
+  }
 };
 
 #endif
