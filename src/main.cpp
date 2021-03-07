@@ -8,6 +8,8 @@
 #include "PairMenu.h"
 
 // TaoTronics TT-BA08
+// --raw_addr: 11 38 117 3 197 152
+
 #define EASYBUTTON_FUNCTIONAL_SUPPORT 1
 #define AUDIO_OUT_PIN DAC1
 #define MICROPHONE_PIN A11

@@ -199,6 +199,9 @@ private:
 
       ESP_LOGD(GAP_TAG, "--name: %s", bdname);
 
+      uint8_t *raw_addr = address.value;
+      ESP_LOGD(GAP_TAG, "--raw_addr: %d %d %d %d %d %d", raw_addr[0], raw_addr[1], raw_addr[2], raw_addr[3], raw_addr[4], raw_addr[5]);
+
       DeviceInformation deviceInfo = {
           .address = address,
           .name = bdname,
