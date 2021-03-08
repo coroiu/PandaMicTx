@@ -9,7 +9,7 @@
 #include "DiscoverySession.h"
 
 #define BC_TAG
-#define BT_DEVICE_NAME "PandaThing"
+#define BT_DEVICE_NAME "PandaMic"
 
 class BluetoothClient
 {
