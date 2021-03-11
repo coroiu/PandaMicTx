@@ -8,6 +8,7 @@
 #include <esp_gap_bt_api.h>
 #include <esp_a2dp_api.h>
 #include <esp_avrc_api.h>
+#include "bluetooth.h"
 #include "DeviceInformation.h"
 #include "song.h";
 
@@ -27,7 +28,6 @@ typedef struct
 } bt_app_msg_t;
 
 typedef void (*bt_app_copy_cb_t)(bt_app_msg_t *msg, void *p_dest, void *p_src);
-typedef std::function<int32_t(uint8_t *data, int32_t len)> data_callback_t;
 
 bool bt_app_work_dispatch(bt_app_cb_t p_cback, uint16_t event, void *p_params, int param_len, bt_app_copy_cb_t p_copy_cback);
 
@@ -158,7 +158,16 @@ private:
       {
         // a2dp_app_heart_beat(nullptr);
         ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_START));
+        esp_bredr_tx_power_set(ESP_PWR_LVL_N12, ESP_PWR_LVL_N3);
       }
+    }
+    else if (event == ESP_A2D_AUDIO_STATE_EVT)
+    {
+      ESP_LOGD("", "A2DP audio state: %d; mcc: %d", param->audio_stat.state, param->audio_cfg.mcc);
+    }
+    else if (event == ESP_A2D_MEDIA_CTRL_ACK_EVT)
+    {
+      ESP_LOGD("", "A2DP media ctrl cmd: %d; state: %d", param->media_ctrl_stat.cmd, param->media_ctrl_stat.status);
     }
   }
 
@@ -177,12 +186,12 @@ private:
   int32_t bt_data_callback(uint8_t *data, int32_t len)
   {
     static int totalPlayed = 0;
-    int read = dataCallback(data, len);
+    int32_t read = dataCallback(data, len);
     // memset(data, 100, len);
     totalPlayed += read;
     if (totalPlayed % (512 * 100) == 0)
     {
-      ESP_LOGD("", "Provided data: %d", totalPlayed);
+      // ESP_LOGD("", "Provided data: %d", totalPlayed);
     }
     return read;
   }

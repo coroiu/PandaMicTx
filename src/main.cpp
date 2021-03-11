@@ -6,6 +6,7 @@
 #include <Navigation.h>
 #include <BluetoothClient.h>
 #include <A2DPSession.h>
+#include <esp_pm.h>
 #include "PairMenu.h"
 #include "audio_in.h"
 
@@ -24,6 +25,7 @@ BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
 #define BUTTON_A 15
 #define BUTTON_B 32
 #define BUTTON_C 14
+#define AMPLIFICATION 1.5
 
 #define LOG_TAG "main"
 
@@ -39,19 +41,23 @@ EasyButton buttonC(BUTTON_C);
 
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
+MenuInfo *cpuInfo;
 
 void redraw();
 void startScan();
 void stopScan();
 void activateBluetooth();
 void turnOff();
-uint32_t dataCallback(uint8_t *data, int32_t len);
+int32_t dataCallback(uint8_t *data, int32_t len);
 
 // DiscoverySession session;
 A2DPSession session(dataCallback);
+// HFPSession session(dataCallback);
 
 void setup()
 {
+  // setCpuFrequencyMhz(80);
+  setCpuFrequencyMhz(80);
   pinMode(MICROPHONE_PIN, INPUT);
   pinMode(BATTERY_PIN, INPUT);
   pinMode(BUILTIN_LED, OUTPUT);
@@ -60,7 +66,8 @@ void setup()
   buttonB.begin();
   buttonC.begin();
 
-  Serial.begin(9600);
+  Serial.begin(115200);
+  // Serial.begin(1000000);
   Serial.println("OLED FeatherWing test");
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
 
@@ -83,7 +90,9 @@ void setup()
   // mainMenu->subMenu("Menu3", "Menu number 3");
   // mainMenu->subMenu("Menu4", "Menu number 4");
   // analogInputInfo = mainMenu->info("ADC: ?v");
-  batteryInfo = mainMenu->info("Battery: ?v");
+  Menu *infoMenu = mainMenu->subMenu("Dev Inf", "Device information");
+  batteryInfo = infoMenu->info("Battery: ?");
+  cpuInfo = infoMenu->info("CPU: ?");
   mainMenu->command("Turn off", []() { turnOff(); });
 
   buttonA.onPressed([]() { navigation.input(KEY_UP); });
@@ -118,6 +127,10 @@ void loop()
   sprintf(bV, "Battery: %.2fv", analogRead(BATTERY_PIN) * BATTERY_MODIFIER);
   batteryInfo->label = string(bV);
 
+  char cI[50];
+  sprintf(cI, "CPU: %dMHz", getCpuFrequencyMhz());
+  cpuInfo->label = string(cI);
+
   // int mic = analogRead(MICROPHONE_PIN);
   // sprintf(bV, "ADC: %.2fv", analogRead(MICROPHONE_PIN) * ADC_MODIFIER);
   // analogInputInfo->label = string(bV);
@@ -131,6 +144,23 @@ void loop()
 
   // delay(10);
   // display.display();
+
+  // if (print)
+  // {
+  //   int len = 512;
+  //   size_t read;
+  //   uint32_t *buff32 = (uint32_t *)buffer;
+  //   uint16_t buff16[len / 2];
+  //   ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len, &read, portMAX_DELAY));
+
+  //   for (int i(0); i < read / 4; ++i)
+  //   {
+  //     buff16[i] = buff32[i] / 65536;
+  //   }
+
+  //   Serial.println(buff32[0] / 65536);
+  // Serial.println(buff32[0]);
+  // }
 
   vTaskDelay(10);
   yield();
@@ -163,32 +193,15 @@ void startScan()
   if (session.start(testDevice))
   {
     audio_start();
+    // print = true;
   }
-
-  // DiscoverySession session;
-  // session.start();
-  // delay(25000);
-  // session.start();
-  // delay(25000);
-
-  // delay(5000);
-  // status = bluetooth.disable();
-
-  // if (status)
-  // {
-  //   ESP_LOGD(LOG_TAG, "Successfully turned off bluetooth.");
-  // }
-  // else
-  // {
-  //   ESP_LOGW(LOG_TAG, "Failed to turn off bluetooth.");
-  //   return;
-  // }
 }
 
 void stopScan()
 {
-  session.stop();
+  // session.stop();
   audio_stop();
+  // print = false;
 }
 
 void turnOff()
@@ -198,9 +211,20 @@ void turnOff()
   esp_deep_sleep_start();
 }
 
-uint32_t dataCallback(uint8_t *data, int32_t len)
+uint8_t buffer[2048];
+int32_t dataCallback(uint8_t *data, int32_t len)
 {
   size_t read;
-  i2s_read(I2S_PORT, data, len, &read, 0);
-  return read;
+  ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, pdMS_TO_TICKS(10)));
+  // ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, portMAX_DELAY));
+
+  for (int i = 0; i < read / 8; ++i)
+  {
+    data[4 * i + 0] = buffer[8 * i + 6];
+    data[4 * i + 1] = buffer[8 * i + 7];
+    data[4 * i + 2] = buffer[8 * i + 6];
+    data[4 * i + 3] = buffer[8 * i + 7];
+  }
+
+  return read / 2;
 }

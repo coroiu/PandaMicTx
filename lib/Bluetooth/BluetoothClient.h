@@ -33,6 +33,9 @@ public:
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_BLE));
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    // bt_cfg.auto_latency = true;
+    // bt_cfg.mode = ESP_BT_MODE_BTDM;
+    // bt_cfg.mode = ESP_BT_MODE_CLASSIC_BT;
 
     // Turn on bluetooth
     btStart();
