@@ -12,11 +12,11 @@
 
 // TaoTronics TT-BA08
 // --raw_addr: 11 38 117 3 197 152
-BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
+// BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
 
 // Desktop
 // --raw_addr: 76 187 88 211 20 164
-// BluetoothAddress testDevice(esp_bd_addr_t{76, 187, 88, 211, 20, 164});
+BluetoothAddress testDevice(esp_bd_addr_t{76, 187, 88, 211, 20, 164});
 
 #define EASYBUTTON_FUNCTIONAL_SUPPORT 1
 #define AUDIO_OUT_PIN DAC1

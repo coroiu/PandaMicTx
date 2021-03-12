@@ -105,8 +105,11 @@ public:
     ESP_ERROR_CHECK(esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, 0, 0));
 
     // // set discoverable and connectable mode
-    // err = esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE);
+    // ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE));
+    ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE));
+    // ESP_ERROR_CHECK(esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 20, 0));
     // ESP_ERROR_CHECK(err);
+    // ESP_ERROR_CHECK(esp_bt_gap_set_cod());
     ESP_ERROR_CHECK(esp_a2d_source_connect(deviceAddress.value));
 
     connectionState = ConnectionState::CONNECTING;
