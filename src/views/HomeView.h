@@ -4,6 +4,7 @@
 #include <Fonts/Picopixel.h>
 #include <Drawable.h>
 #include <A2DPSession.h>
+#include "utils.h"
 
 #define CHAR_HEIGHT 5
 #define CHAR_WIDTH 5
@@ -13,13 +14,20 @@
 class HomeView : public Drawable
 {
   bool hasChanged = true;
+  Drawable *mainMenu;
+  Drawable *visualizer;
   A2DPSession *aSession;
 
   GFXcanvas1 sidebar;
   GFXcanvas1 canvas;
 
 public:
-  HomeView(Adafruit_GFX *gfx, A2DPSession *aSession) : Drawable(gfx), aSession(aSession), sidebar(SIDEBAR_WIDTH, gfx->height()), canvas(gfx->width() - SIDEBAR_WIDTH, gfx->height())
+  HomeView(Adafruit_GFX *gfx, Drawable *mainMenu, Drawable *visualizer, A2DPSession *aSession)
+      : Drawable(gfx),
+        mainMenu(mainMenu),
+        visualizer(visualizer),
+        aSession(aSession),
+        sidebar(SIDEBAR_WIDTH, gfx->height()), canvas(gfx->width() - SIDEBAR_WIDTH, gfx->height())
   {
     sidebar.setFont(&Picopixel);
     canvas.setFont(&Picopixel);
@@ -32,18 +40,29 @@ public:
 
   virtual void draw()
   {
-    hasChanged = false;
+    sidebar.fillScreen(0);
+    canvas.fillScreen(0);
 
     drawCanvas();
     drawSidebar();
 
     gfx->drawBitmap(SIDEBAR_WIDTH, 0, canvas.getBuffer(), canvas.width(), canvas.height(), 1, 0);
     gfx->drawBitmap(0, 0, sidebar.getBuffer(), sidebar.width(), sidebar.height(), 1, 0);
+    hasChanged = false;
   }
 
   virtual NavigationCommand *input(int key)
   {
     hasChanged = true;
+
+    switch (key)
+    {
+    case KEY_B:
+      return new NavigateToCommand(mainMenu);
+    case KEY_C:
+      return new NavigateToCommand(visualizer);
+    }
+
     return new NopCommand();
   }
 
@@ -58,12 +77,17 @@ public:
 private:
   void drawCanvas()
   {
+    char bV[50];
+
     // Header
     canvas.setCursor(0, CHAR_HEIGHT);
-    canvas.println(":: PANDA MICROPHONE");
+    canvas.print(":: PANDA MICROPHONE");
+    canvas.setCursor(canvas.width() - CHAR_WIDTH * 5, CHAR_HEIGHT);
+    sprintf(bV, "%.0f%%", getBatteryPercentage() * 100);
+    canvas.print(bV);
     canvas.drawFastHLine(0, CHAR_HEIGHT + 2, canvas.width(), 1);
 
-    canvas.setCursor(canvas.getCursorX(), canvas.getCursorY() + 2);
+    canvas.setCursor(0, CHAR_HEIGHT * 2 + 3);
     canvas.println("Connected: Desk..");
   }
 

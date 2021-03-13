@@ -5,12 +5,12 @@
 #include <NavigationCommand.h>
 
 #define KEY_A 0
-#define KEY_B 0
-#define KEY_C 0
+#define KEY_B 1
+#define KEY_C 2
 
 #define KEY_UP KEY_A
-#define KEY_DOWN KEY_B
-#define KEY_SELECT KEY_C
+#define KEY_SELECT KEY_B
+#define KEY_DOWN KEY_C
 
 class Drawable
 {

@@ -1,0 +1,13 @@
+#ifndef _CONTANTS_H
+#define _CONTANTS_H
+
+#define EASYBUTTON_FUNCTIONAL_SUPPORT 1
+#define AUDIO_OUT_PIN DAC1
+#define MICROPHONE_PIN A11
+#define BATTERY_PIN A13
+#define BUTTON_A 15
+#define BUTTON_B 32
+#define BUTTON_C 14
+#define AMPLIFICATION 1.5
+
+#endif

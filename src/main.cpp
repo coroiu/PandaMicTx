@@ -9,6 +9,7 @@
 #include <A2DPSession.h>
 #include <Menu.h>
 #include <esp_pm.h>
+#include "constants.h"
 #include "audio_in.h"
 #include "views/HomeView.h"
 #include "views/PairMenu.h"
@@ -21,15 +22,6 @@ BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
 // Desktop
 // --raw_addr: 76 187 88 211 20 164
 // BluetoothAddress testDevice(esp_bd_addr_t{76, 187, 88, 211, 20, 164});
-
-#define EASYBUTTON_FUNCTIONAL_SUPPORT 1
-#define AUDIO_OUT_PIN DAC1
-#define MICROPHONE_PIN A11
-#define BATTERY_PIN A13
-#define BUTTON_A 15
-#define BUTTON_B 32
-#define BUTTON_C 14
-#define AMPLIFICATION 1.5
 
 #define LOG_TAG "main"
 
@@ -48,7 +40,7 @@ Menu *mainMenu;
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 MenuInfo *cpuInfo;
-VolumeVisalizer volumeVisulizer(&display);
+VolumeVisalizer visualizer(&display);
 
 void redraw();
 void startScan();
@@ -79,8 +71,8 @@ void setup()
   display.display();
 
   // Views
-  homeView = new HomeView(&display, &aSession);
   mainMenu = new Menu(&display, "Main Menu", "Main");
+  homeView = new HomeView(&display, mainMenu, &visualizer, &aSession);
   navigation.navigateTo(homeView);
 
   // Menus
@@ -88,7 +80,6 @@ void setup()
   mainMenu->command("Start scan", startScan);
   mainMenu->command("Stop scan", stopScan);
   mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
-  mainMenu->command("Visualizer", []() { navigation.navigateTo(&volumeVisulizer); });
   Menu *infoMenu = mainMenu->subMenu("Dev Inf", "Device information");
   batteryInfo = infoMenu->info("Battery: ?");
   cpuInfo = infoMenu->info("CPU: ?");
@@ -197,7 +188,7 @@ int32_t dataCallback(uint8_t *data, int32_t len)
 
   int samples_read = len / 2;
   int16_t *data16 = (int16_t *)data;
-  if (volumeVisulizer.isActive && samples_read > 0)
+  if (visualizer.isActive && samples_read > 0)
   {
     float mean = 0;
     for (int i = 0; i < samples_read; ++i)
@@ -212,7 +203,7 @@ int32_t dataCallback(uint8_t *data, int32_t len)
       minsample = min(minsample, data16[i] - mean);
       maxsample = max(maxsample, data16[i] - mean);
     }
-    volumeVisulizer.volume = (maxsample - minsample) / 65536;
+    visualizer.volume = (maxsample - minsample) / 65536;
   }
 
   return read / 2;
