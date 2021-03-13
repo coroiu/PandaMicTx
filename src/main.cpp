@@ -215,8 +215,8 @@ uint8_t buffer[2048];
 int32_t dataCallback(uint8_t *data, int32_t len)
 {
   size_t read;
-  ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, pdMS_TO_TICKS(10)));
-  // ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, portMAX_DELAY));
+  // ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, pdMS_TO_TICKS(10)));
+  ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, portMAX_DELAY));
 
   for (int i = 0; i < read / 8; ++i)
   {

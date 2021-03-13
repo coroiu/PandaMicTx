@@ -49,6 +49,7 @@ class A2DPSession
   };
 
   static A2DPSession *ActiveSession;
+  BluetoothAddress currentDevice;
   esp_a2d_connection_state_t a2dpConnectionState = ESP_A2D_CONNECTION_STATE_DISCONNECTED;
   bool avrcConnectionState = false;
   ConnectionState connectionState = ConnectionState::IDLE;
@@ -110,14 +111,19 @@ public:
     // ESP_ERROR_CHECK(esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 20, 0));
     // ESP_ERROR_CHECK(err);
     // ESP_ERROR_CHECK(esp_bt_gap_set_cod());
-    ESP_ERROR_CHECK(esp_a2d_source_connect(deviceAddress.value));
+    currentDevice = deviceAddress;
+    ESP_ERROR_CHECK(esp_a2d_source_connect(currentDevice.value));
 
     connectionState = ConnectionState::CONNECTING;
     ESP_LOGD(DS_TAG, "Started a2dp sesssion.");
     return true;
   }
 
-  void stop() {}
+  void stop()
+  {
+    keepActive = false;
+    ESP_ERROR_CHECK(esp_a2d_source_disconnect(currentDevice.value));
+  }
 
 private:
   // This is how the BT Stack communicates device and connection information to us.
@@ -162,6 +168,18 @@ private:
         // a2dp_app_heart_beat(nullptr);
         ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_START));
         esp_bredr_tx_power_set(ESP_PWR_LVL_N12, ESP_PWR_LVL_N3);
+      }
+      else if (a2dpConnectionState == ESP_A2D_CONNECTION_STATE_DISCONNECTED)
+      {
+        if (keepActive)
+        {
+          ESP_ERROR_CHECK(esp_a2d_source_connect(currentDevice.value));
+        }
+        else
+        {
+          A2DPSession::ActiveSession = nullptr;
+          ESP_LOGD(DS_TAG, "A2dp sesssion ended.");
+        }
       }
     }
     else if (event == ESP_A2D_AUDIO_STATE_EVT)

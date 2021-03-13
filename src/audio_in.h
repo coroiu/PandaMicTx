@@ -13,13 +13,14 @@
 
 static const i2s_config_t i2s_config = {
     .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX), // Receive, not transfer
-    .sample_rate = 44100,                              // 44.1KHz
-    .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,      // could only get it to work with 32bits
+    // .sample_rate = 44100,                              // 44.1KHz
+    .sample_rate = 48000,                              // 44.1KHz
+    .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT, // could only get it to work with 32bits
     // .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,       // although the SEL config should be left, it seems to transmit on right
     .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT, // although the SEL config should be left, it seems to transmit on right
     .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1, // Interrupt level 1
-    .dma_buf_count = 2,                       // number of buffers
+    .dma_buf_count = 3,                       // number of buffers
     .dma_buf_len = 128                        // samples per buffer
 };
 
