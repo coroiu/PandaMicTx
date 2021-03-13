@@ -45,16 +45,16 @@ public:
     else if (command->commandType() == NAVIGATE_TO_COMMAND)
     {
       NavigateToCommand *navigateToCommand = static_cast<NavigateToCommand *>(command);
-      navigateTo(navigateToCommand->menu);
+      navigateTo(navigateToCommand->drawable);
     }
 
     delete command;
   }
 
-  void navigateTo(Menu *menu)
+  void navigateTo(Drawable *drawable)
   {
-    stack.push(menu);
-    menu->onEnter();
+    stack.push(drawable);
+    drawable->onEnter();
   }
 
   void back()

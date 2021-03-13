@@ -8,15 +8,16 @@
 #include <A2DPSession.h>
 #include <esp_pm.h>
 #include "PairMenu.h"
+#include "VolumeVisualizer.h"
 #include "audio_in.h"
 
 // TaoTronics TT-BA08
 // --raw_addr: 11 38 117 3 197 152
-// BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
+BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
 
 // Desktop
 // --raw_addr: 76 187 88 211 20 164
-BluetoothAddress testDevice(esp_bd_addr_t{76, 187, 88, 211, 20, 164});
+// BluetoothAddress testDevice(esp_bd_addr_t{76, 187, 88, 211, 20, 164});
 
 #define EASYBUTTON_FUNCTIONAL_SUPPORT 1
 #define AUDIO_OUT_PIN DAC1
@@ -42,6 +43,7 @@ EasyButton buttonC(BUTTON_C);
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 MenuInfo *cpuInfo;
+VolumeVisalizer volumeVisulizer(&display);
 
 void redraw();
 void startScan();
@@ -85,11 +87,7 @@ void setup()
   mainMenu->command("Start scan", startScan);
   mainMenu->command("Stop scan", stopScan);
   mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
-  // Menu *menu1 = mainMenu->subMenu("Menu1", "Menu number 1");
-  // mainMenu->subMenu("Menu2", "Menu number 2");
-  // mainMenu->subMenu("Menu3", "Menu number 3");
-  // mainMenu->subMenu("Menu4", "Menu number 4");
-  // analogInputInfo = mainMenu->info("ADC: ?v");
+  mainMenu->command("Visualizer", []() { navigation.navigateTo(&volumeVisulizer); });
   Menu *infoMenu = mainMenu->subMenu("Dev Inf", "Device information");
   batteryInfo = infoMenu->info("Battery: ?");
   cpuInfo = infoMenu->info("CPU: ?");
@@ -224,6 +222,26 @@ int32_t dataCallback(uint8_t *data, int32_t len)
     data[4 * i + 1] = buffer[8 * i + 7];
     data[4 * i + 2] = buffer[8 * i + 6];
     data[4 * i + 3] = buffer[8 * i + 7];
+  }
+
+  int samples_read = len / 2;
+  int16_t *data16 = (int16_t *)data;
+  if (volumeVisulizer.isActive && samples_read > 0)
+  {
+    float mean = 0;
+    for (int i = 0; i < samples_read; ++i)
+    {
+      mean += data16[i];
+    }
+    mean /= samples_read;
+
+    float maxsample = -1e8, minsample = 1e8;
+    for (int i = 0; i < samples_read; ++i)
+    {
+      minsample = min(minsample, data16[i] - mean);
+      maxsample = max(maxsample, data16[i] - mean);
+    }
+    volumeVisulizer.volume = (maxsample - minsample) / 65536;
   }
 
   return read / 2;

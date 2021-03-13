@@ -14,7 +14,7 @@ class MenuCommand : public MenuItem
 public:
   MenuCommand(string label, callback_t callback) : MenuItem(label, ""), callback(callback) {}
 
-  NavigationCommand *activate()
+  NavigationCommand *activate() override
   {
     callback();
     return new NopCommand();

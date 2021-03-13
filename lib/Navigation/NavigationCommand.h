@@ -7,7 +7,7 @@
 
 typedef int command_type_t;
 
-class Menu;
+class Drawable;
 
 class NavigationCommand
 {
@@ -38,9 +38,9 @@ class BackCommand : public NavigationCommand
 class NavigateToCommand : public NavigationCommand
 {
 public:
-  Menu *menu;
+  Drawable *drawable;
 
-  NavigateToCommand(Menu *menu) : menu(menu){};
+  NavigateToCommand(Drawable *drawable) : drawable(drawable){};
 
   command_type_t commandType() override
   {

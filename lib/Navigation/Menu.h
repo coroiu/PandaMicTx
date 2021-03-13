@@ -22,7 +22,6 @@ using namespace std;
 
 class Menu : public MenuItem, public Drawable
 {
-  Adafruit_GFX *gfx;
   GFXcanvas1 headerCanvas;
   GFXcanvas1 mainCanvas;
 
@@ -33,7 +32,7 @@ class Menu : public MenuItem, public Drawable
   bool hasChanged = true;
 
 public:
-  Menu(Adafruit_GFX *gfx, string label) : Menu(gfx, label, "") {};
+  Menu(Adafruit_GFX *gfx, string label) : Menu(gfx, label, ""){};
 
   Menu(Adafruit_GFX *gfx, string label, string name) : Drawable(gfx), headerCanvas(HEADER_WIDTH, gfx->height()), mainCanvas(gfx->width() - HEADER_WIDTH, gfx->height()), MenuItem(label, name)
   {
