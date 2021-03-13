@@ -9,19 +9,11 @@
 
 class Navigation
 {
-  Menu mainMenu;
   std::stack<Drawable *> stack;
 
 public:
-  Adafruit_GFX *gfx;
-
-  Navigation(Adafruit_GFX *gfx) : gfx(gfx), mainMenu(gfx, "Main Menu", "Main")
+  Navigation()
   {
-  }
-
-  Menu *menu()
-  {
-    return &mainMenu;
   }
 
   bool needsRedraw()
@@ -66,10 +58,7 @@ public:
 private:
   Drawable *currentFrame()
   {
-    if (stack.size() == 0)
-      return &mainMenu;
-    else
-      return stack.top();
+    return stack.top();
   }
 };
 

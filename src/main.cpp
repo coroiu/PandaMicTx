@@ -1,3 +1,4 @@
+#include <string>
 #include <Arduino.h>
 #include <EasyButton.h>
 #include <Wire.h>
@@ -6,10 +7,11 @@
 #include <Navigation.h>
 #include <BluetoothClient.h>
 #include <A2DPSession.h>
+#include <Menu.h>
 #include <esp_pm.h>
-#include "PairMenu.h"
-#include "VolumeVisualizer.h"
 #include "audio_in.h"
+#include "views/PairMenu.h"
+#include "views/VolumeVisualizer.h"
 
 // TaoTronics TT-BA08
 // --raw_addr: 11 38 117 3 197 152
@@ -33,13 +35,14 @@ BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
 const float ADC_MODIFIER = 3.3 / 4095;
 const float BATTERY_MODIFIER = 2 * (3.45 / 4095);
 Adafruit_SSD1306 display(128, 32, &Wire);
-Navigation navigation(&display);
+Navigation navigation;
 // BluetoothClient bt;
 
 EasyButton buttonA(BUTTON_A);
 EasyButton buttonB(BUTTON_B);
 EasyButton buttonC(BUTTON_C);
 
+MenuInfo *mainMenu;
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 MenuInfo *cpuInfo;
@@ -82,7 +85,7 @@ void setup()
   display.clearDisplay();
   display.display();
 
-  Menu *mainMenu = navigation.menu();
+  Menu *mainMenu = new Menu(&display, "Main Menu", "Main");
   mainMenu->custom([](Adafruit_GFX *gfx) { return new PairMenu(gfx); });
   mainMenu->command("Start scan", startScan);
   mainMenu->command("Stop scan", stopScan);
@@ -92,6 +95,7 @@ void setup()
   batteryInfo = infoMenu->info("Battery: ?");
   cpuInfo = infoMenu->info("CPU: ?");
   mainMenu->command("Turn off", []() { turnOff(); });
+  navigation.navigateTo(mainMenu);
 
   buttonA.onPressed([]() { navigation.input(KEY_UP); });
   buttonB.onPressed([]() { navigation.input(KEY_SELECT); });
@@ -128,37 +132,6 @@ void loop()
   char cI[50];
   sprintf(cI, "CPU: %dMHz", getCpuFrequencyMhz());
   cpuInfo->label = string(cI);
-
-  // int mic = analogRead(MICROPHONE_PIN);
-  // sprintf(bV, "ADC: %.2fv", analogRead(MICROPHONE_PIN) * ADC_MODIFIER);
-  // analogInputInfo->label = string(bV);
-
-  // int mic;
-  // while (1) {
-  //   mic = analogRead(MICROPHONE_PIN);
-
-  //   dacWrite(AUDIO_OUT_PIN, analogRead(MICROPHONE_PIN) / 16);
-  // }
-
-  // delay(10);
-  // display.display();
-
-  // if (print)
-  // {
-  //   int len = 512;
-  //   size_t read;
-  //   uint32_t *buff32 = (uint32_t *)buffer;
-  //   uint16_t buff16[len / 2];
-  //   ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len, &read, portMAX_DELAY));
-
-  //   for (int i(0); i < read / 4; ++i)
-  //   {
-  //     buff16[i] = buff32[i] / 65536;
-  //   }
-
-  //   Serial.println(buff32[0] / 65536);
-  // Serial.println(buff32[0]);
-  // }
 
   vTaskDelay(10);
   yield();
