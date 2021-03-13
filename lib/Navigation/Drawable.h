@@ -4,9 +4,13 @@
 #include <Adafruit_GFX.h>
 #include <NavigationCommand.h>
 
-#define KEY_UP 0
-#define KEY_DOWN 1
-#define KEY_SELECT 2
+#define KEY_A 0
+#define KEY_B 0
+#define KEY_C 0
+
+#define KEY_UP KEY_A
+#define KEY_DOWN KEY_B
+#define KEY_SELECT KEY_C
 
 class Drawable
 {

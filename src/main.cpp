@@ -10,6 +10,7 @@
 #include <Menu.h>
 #include <esp_pm.h>
 #include "audio_in.h"
+#include "views/HomeView.h"
 #include "views/PairMenu.h"
 #include "views/VolumeVisualizer.h"
 
@@ -42,7 +43,8 @@ EasyButton buttonA(BUTTON_A);
 EasyButton buttonB(BUTTON_B);
 EasyButton buttonC(BUTTON_C);
 
-MenuInfo *mainMenu;
+HomeView *homeView;
+Menu *mainMenu;
 MenuInfo *analogInputInfo;
 MenuInfo *batteryInfo;
 MenuInfo *cpuInfo;
@@ -55,37 +57,33 @@ void activateBluetooth();
 void turnOff();
 int32_t dataCallback(uint8_t *data, int32_t len);
 
-// DiscoverySession session;
-A2DPSession session(dataCallback);
-// HFPSession session(dataCallback);
+A2DPSession aSession(dataCallback);
 
 void setup()
 {
-  // setCpuFrequencyMhz(80);
+  // Hardware
   setCpuFrequencyMhz(80);
+  Serial.begin(115200);
+  Serial.println("OLED FeatherWing test");
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
   pinMode(MICROPHONE_PIN, INPUT);
   pinMode(BATTERY_PIN, INPUT);
   pinMode(BUILTIN_LED, OUTPUT);
 
-  buttonA.begin();
-  buttonB.begin();
-  buttonC.begin();
-
-  Serial.begin(115200);
-  // Serial.begin(1000000);
-  Serial.println("OLED FeatherWing test");
-  display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
-
+  // Display
   display.display();
   delay(1000);
-
-  // display.setTextSize(1);
   display.setFont(&TomThumb);
   display.setTextColor(SSD1306_WHITE);
   display.clearDisplay();
   display.display();
 
-  Menu *mainMenu = new Menu(&display, "Main Menu", "Main");
+  // Views
+  homeView = new HomeView(&display, &aSession);
+  mainMenu = new Menu(&display, "Main Menu", "Main");
+  navigation.navigateTo(homeView);
+
+  // Menus
   mainMenu->custom([](Adafruit_GFX *gfx) { return new PairMenu(gfx); });
   mainMenu->command("Start scan", startScan);
   mainMenu->command("Stop scan", stopScan);
@@ -95,12 +93,16 @@ void setup()
   batteryInfo = infoMenu->info("Battery: ?");
   cpuInfo = infoMenu->info("CPU: ?");
   mainMenu->command("Turn off", []() { turnOff(); });
-  navigation.navigateTo(mainMenu);
 
-  buttonA.onPressed([]() { navigation.input(KEY_UP); });
-  buttonB.onPressed([]() { navigation.input(KEY_SELECT); });
-  buttonC.onPressed([]() { navigation.input(KEY_DOWN); });
+  // Buttons
+  buttonA.begin();
+  buttonB.begin();
+  buttonC.begin();
+  buttonA.onPressed([]() { navigation.input(KEY_A); });
+  buttonB.onPressed([]() { navigation.input(KEY_B); });
+  buttonC.onPressed([]() { navigation.input(KEY_C); });
 
+  // Initializations
   activateBluetooth();
   audio_init();
 }
@@ -120,10 +122,6 @@ void loop()
 
   if (navigation.needsRedraw())
     redraw();
-
-  // display.setCursor(0, 5);
-  // display.print(analogRead(BATTERY_PIN) * BATTERY_MODIFIER, 2);
-  // display.println("V");
 
   char bV[50];
   sprintf(bV, "Battery: %.2fv", analogRead(BATTERY_PIN) * BATTERY_MODIFIER);
@@ -161,7 +159,7 @@ void startScan()
 {
   ESP_LOGD(LOG_TAG, "Running test command...");
 
-  if (session.start(testDevice))
+  if (aSession.start(testDevice))
   {
     audio_start();
     // print = true;
