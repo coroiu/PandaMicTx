@@ -9,10 +9,7 @@
 #include "MenuCommand.h"
 #include "MenuInfo.h"
 #include "NavigationCommand.h"
-
-#define KEY_UP 0
-#define KEY_DOWN 1
-#define KEY_SELECT 2
+#include "Drawable.h"
 
 #define CHAR_HEIGHT 5
 #define CHAR_WIDTH 3
@@ -23,7 +20,7 @@
 
 using namespace std;
 
-class Menu : public MenuItem
+class Menu : public MenuItem, public Drawable
 {
   Adafruit_GFX *gfx;
   GFXcanvas1 headerCanvas;
@@ -36,21 +33,21 @@ class Menu : public MenuItem
   bool hasChanged = true;
 
 public:
-  Menu(Adafruit_GFX *gfx, string label) : Menu(gfx, label, ""){};
+  Menu(Adafruit_GFX *gfx, string label) : Menu(gfx, label, "") {};
 
-  Menu(Adafruit_GFX *gfx, string label, string name) : gfx(gfx), headerCanvas(HEADER_WIDTH, gfx->height()), mainCanvas(gfx->width() - HEADER_WIDTH, gfx->height()), MenuItem(label, name)
+  Menu(Adafruit_GFX *gfx, string label, string name) : Drawable(gfx), headerCanvas(HEADER_WIDTH, gfx->height()), mainCanvas(gfx->width() - HEADER_WIDTH, gfx->height()), MenuItem(label, name)
   {
     headerCanvas.setFont(&TomThumb);
     mainCanvas.setFont(&TomThumb);
     info("Back");
   }
 
-  bool needsRedraw()
+  bool needsRedraw() override
   {
     return hasChanged;
   }
 
-  void draw()
+  void draw() override
   {
     if (!name.empty())
     {
@@ -64,7 +61,7 @@ public:
     hasChanged = false;
   }
 
-  NavigationCommand *input(int key)
+  NavigationCommand *input(int key) override
   {
     notifyChanged();
 
@@ -137,8 +134,8 @@ public:
     int selectedItem = 0;
   }
 
-  virtual void onEnter() {}
-  virtual void onLeave() {}
+  virtual void onEnter() override {}
+  virtual void onLeave() override {}
 
 protected:
   void notifyChanged()

@@ -10,7 +10,7 @@
 class Navigation
 {
   Menu mainMenu;
-  std::stack<Menu *> stack;
+  std::stack<Drawable *> stack;
 
 public:
   Adafruit_GFX *gfx;
@@ -26,17 +26,17 @@ public:
 
   bool needsRedraw()
   {
-    return currentMenu()->needsRedraw();
+    return currentFrame()->needsRedraw();
   }
 
   void draw()
   {
-    currentMenu()->draw();
+    currentFrame()->draw();
   }
 
   void input(int key)
   {
-    NavigationCommand *command = currentMenu()->input(key);
+    NavigationCommand *command = currentFrame()->input(key);
 
     if (command->commandType() == BACK_COMMAND)
     {
@@ -59,12 +59,12 @@ public:
 
   void back()
   {
-    currentMenu()->onLeave();
+    currentFrame()->onLeave();
     stack.pop();
   }
 
 private:
-  Menu *currentMenu()
+  Drawable *currentFrame()
   {
     if (stack.size() == 0)
       return &mainMenu;
