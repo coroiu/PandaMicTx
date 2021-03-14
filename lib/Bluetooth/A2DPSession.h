@@ -33,31 +33,32 @@ bool bt_app_work_dispatch(bt_app_cb_t p_cback, uint16_t event, void *p_params, i
 
 class A2DPSession
 {
+public:
   enum ConnectionState
   {
-    IDLE,
+    DISCONNECTED,
     CONNECTING,
     CONNECTED
   };
 
   enum MediaState
   {
-    APP_AV_MEDIA_STATE_IDLE,
-    APP_AV_MEDIA_STATE_STARTING,
-    APP_AV_MEDIA_STATE_STARTED,
-    APP_AV_MEDIA_STATE_STOPPING,
+    INACTIVE,
+    ACTIVE
   };
 
+private:
   static A2DPSession *ActiveSession;
   BluetoothAddress currentDevice;
   esp_a2d_connection_state_t a2dpConnectionState = ESP_A2D_CONNECTION_STATE_DISCONNECTED;
-  bool avrcConnectionState = false;
-  ConnectionState connectionState = ConnectionState::IDLE;
-  MediaState mediaState;
   bool keepActive;
   data_callback_t dataCallback;
 
 public:
+  bool avrcConnectionState = false;
+  ConnectionState connectionState = ConnectionState::DISCONNECTED;
+  MediaState mediaState;
+
   A2DPSession(data_callback_t dataCallback) : dataCallback(dataCallback)
   {
   }
@@ -157,20 +158,37 @@ private:
   // callback function for A2DP source
   void bt_a2dp_callback(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
   {
+    // [D][A2DPSession.h:160] bt_a2dp_callback(): A2DP event 0
+    // [D][A2DPSession.h:165] bt_a2dp_callback(): A2DP connection State: 1
+    // [D][A2DPSession.h:160] bt_a2dp_callback(): A2DP event 0
+    // [D][A2DPSession.h:165] bt_a2dp_callback(): A2DP connection State: 2
+    // [D][A2DPSession.h:160] bt_a2dp_callback(): A2DP event 3
+    // [D][A2DPSession.h:191] bt_a2dp_callback(): A2DP media ctrl cmd: 2; state: 0
+    // [D][A2DPSession.h:160] bt_a2dp_callback(): A2DP event 1
+    // [D][A2DPSession.h:187] bt_a2dp_callback(): A2DP audio state: 2; mcc: -78
+    // [D][A2DPSession.h:198] bt_avrc_callback(): AVRC event 0
+    // [D][A2DPSession.h:202] bt_avrc_callback(): Avrc connection State: 1
+    // [D][A2DPSession.h:198] bt_avrc_callback(): AVRC event 5
+
     ESP_LOGD("", "A2DP event %d", event);
 
     if (event == ESP_A2D_CONNECTION_STATE_EVT)
     {
       a2dpConnectionState = param->conn_stat.state;
       ESP_LOGD("", "A2DP connection State: %d", a2dpConnectionState);
-      if (a2dpConnectionState == ESP_A2D_CONNECTION_STATE_CONNECTED)
+      if (a2dpConnectionState == ESP_A2D_CONNECTION_STATE_CONNECTING)
       {
-        // a2dp_app_heart_beat(nullptr);
+        connectionState = ConnectionState::CONNECTING;
+      }
+      else if (a2dpConnectionState == ESP_A2D_CONNECTION_STATE_CONNECTED)
+      {
+        connectionState = ConnectionState::CONNECTED;
         ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_START));
         esp_bredr_tx_power_set(ESP_PWR_LVL_N12, ESP_PWR_LVL_N3);
       }
       else if (a2dpConnectionState == ESP_A2D_CONNECTION_STATE_DISCONNECTED)
       {
+        connectionState = ConnectionState::DISCONNECTED;
         if (keepActive)
         {
           ESP_ERROR_CHECK(esp_a2d_source_connect(currentDevice.value));

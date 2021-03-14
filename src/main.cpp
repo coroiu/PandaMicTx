@@ -107,6 +107,8 @@ void redraw()
 
 void loop()
 {
+  GlobalTicker::updateAll();
+
   buttonA.read();
   buttonB.read();
   buttonC.read();

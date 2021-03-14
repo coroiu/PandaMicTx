@@ -45,6 +45,8 @@ public:
 
   void navigateTo(Drawable *drawable)
   {
+    if (stack.size() > 0)
+      currentFrame()->onLeave();
     stack.push(drawable);
     drawable->onEnter();
   }
@@ -53,6 +55,7 @@ public:
   {
     currentFrame()->onLeave();
     stack.pop();
+    currentFrame()->onEnter();
   }
 
 private:
