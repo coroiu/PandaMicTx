@@ -116,7 +116,7 @@ private:
     canvas.drawFastHLine(0, CHAR_HEIGHT + 2, canvas.width(), 1);
 
     canvas.setCursor(0, CHAR_HEIGHT * 2 + 3);
-    canvas.println(storage.getActiveDevice().name.c_str());
+    canvas.println(storage.getActiveDevice().name);
 
     canvas.print("BT: ");
     canvas.println(enumToString(aSession->connectionState).c_str());

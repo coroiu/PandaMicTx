@@ -37,6 +37,7 @@ public:
 
   void setActiveDevice(Device device)
   {
+    ESP_LOGD("", "Setting active device: %s (%s)", device.name, device.address.toString().c_str());
     data.activeDevice = device;
     commit();
   }
@@ -48,6 +49,7 @@ public:
 
   void addDevice(Device device)
   {
+    ESP_LOGD("", "Adding new device: %s (%s)", device.name, device.address.toString().c_str());
     data.devices[data.count++] = device;
     commit();
   }
@@ -65,17 +67,20 @@ private:
   void read()
   {
     uint32_t version = 0;
-    nvs_get_u32(_nvs_handle, "version", &version);
+    ESP_ERROR_CHECK_WITHOUT_ABORT(nvs_get_u32(_nvs_handle, "version", &version));
+    ESP_LOGD("", "Load Storage: Current version is %d - found %d.", VERSION, version);
     if (version != VERSION)
       return;
 
-    nvs_get_blob(_nvs_handle, "data", &data, nullptr);
+    uint32_t length = sizeof(Data);
+    ESP_ERROR_CHECK_WITHOUT_ABORT(nvs_get_blob(_nvs_handle, "data", &data, &length));
   }
 
   void commit()
   {
-    nvs_set_blob(_nvs_handle, "data", &data, sizeof(Data));
-    nvs_set_u32(_nvs_handle, "version", VERSION);
+    ESP_ERROR_CHECK_WITHOUT_ABORT(nvs_set_u32(_nvs_handle, "version", VERSION));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(nvs_set_blob(_nvs_handle, "data", &data, sizeof(Data)));
+    ESP_ERROR_CHECK_WITHOUT_ABORT(nvs_commit(_nvs_handle));
   }
 } storage;
 

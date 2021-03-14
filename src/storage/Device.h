@@ -7,7 +7,7 @@
 struct Device
 {
   BluetoothAddress address;
-  std::string name;
+  char name[50];
 };
 
 #endif

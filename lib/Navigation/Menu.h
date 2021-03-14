@@ -113,9 +113,9 @@ public:
     return info;
   }
 
-  void custom(std::function<Menu *(Adafruit_GFX *)> factory)
+  void custom(std::function<MenuItem *(Adafruit_GFX *)> factory)
   {
-    Menu *menu = factory(gfx);
+    MenuItem *menu = factory(gfx);
     menuItems.push_back(menu);
     notifyChanged();
   }

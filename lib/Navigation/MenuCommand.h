@@ -9,6 +9,7 @@ typedef std::function<void()> callback_t;
 
 class MenuCommand : public MenuItem
 {
+protected:
   callback_t callback;
 
 public:
