@@ -42,6 +42,18 @@ MenuInfo *batteryInfo;
 MenuInfo *cpuInfo;
 VolumeVisalizer visualizer(&display);
 
+GlobalTicker powerTicker(5000, []() {
+  if (!digitalRead(LED_BUILTIN))
+  {
+    digitalWrite(LED_BUILTIN, HIGH);
+    vTaskDelay(pdMS_TO_TICKS(20));
+    digitalWrite(LED_BUILTIN, LOW);
+  }
+
+  if (getBatteryPercentage() < 0.15)
+    digitalWrite(LED_BUILTIN, HIGH);
+});
+
 void redraw();
 void startScan();
 void stopScan();
@@ -92,6 +104,9 @@ void setup()
   buttonA.onPressed([]() { navigation.input(KEY_A); });
   buttonB.onPressed([]() { navigation.input(KEY_B); });
   buttonC.onPressed([]() { navigation.input(KEY_C); });
+
+  // Timers
+  powerTicker.start();
 
   // Initializations
   activateBluetooth();

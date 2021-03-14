@@ -70,7 +70,10 @@ public:
   virtual NavigationCommand *input(int key)
   {
     if (!screenActive)
+    {
       screenOn();
+      return new NopCommand();
+    }
 
     screenTicker.start();
     switch (key)
