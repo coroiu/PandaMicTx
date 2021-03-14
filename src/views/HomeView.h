@@ -7,6 +7,7 @@
 #include "GlobalTicker.h"
 #include "utils.h"
 #include "enum_strings.h"
+#include "storage/Storage.h"
 
 #define CHAR_HEIGHT 5
 #define CHAR_WIDTH 5
@@ -115,6 +116,8 @@ private:
     canvas.drawFastHLine(0, CHAR_HEIGHT + 2, canvas.width(), 1);
 
     canvas.setCursor(0, CHAR_HEIGHT * 2 + 3);
+    canvas.println(storage.getActiveDevice().name.c_str());
+
     canvas.print("BT: ");
     canvas.println(enumToString(aSession->connectionState).c_str());
 

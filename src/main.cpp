@@ -14,6 +14,7 @@
 #include "views/HomeView.h"
 #include "views/PairMenu.h"
 #include "views/VolumeVisualizer.h"
+#include "storage/Storage.h"
 
 // TaoTronics TT-BA08
 // --raw_addr: 11 38 117 3 197 152
@@ -73,6 +74,16 @@ void setup()
   pinMode(MICROPHONE_PIN, INPUT);
   pinMode(BATTERY_PIN, INPUT);
   pinMode(BUILTIN_LED, OUTPUT);
+
+  // NVS & Storage
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND)
+  {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
+  storage.init();
 
   // Display
   display.display();

@@ -1,92 +1,81 @@
 #ifndef _STORAGE_H
 #define _STORAGE_H
 
-#include <ArduinoJson.h>
-#include <ArduinoNvs.h>
+#include <nvs.h>
 #include "Device.h"
 
+#define VERSION 1
 #define MAX_DEVICES 30
+
+struct Data
+{
+  Device activeDevice;
+  size_t count = 0;
+  Device devices[MAX_DEVICES];
+};
 
 class Storage
 {
-  DynamicJsonDocument document;
-  ArduinoNvs nvs;
+  Data data;
+  nvs_handle _nvs_handle;
 
 public:
-  Storage() : document(1024)
+  Storage()
   {
-    nvs.begin("panda-mic");
+  }
 
-    if (!deserialize())
-    {
-      init();
-    }
+  void init()
+  {
+    ESP_ERROR_CHECK(nvs_open("panda-mic", NVS_READWRITE, &_nvs_handle));
+    read();
   }
 
   Device getActiveDevice()
   {
-    return mapToDevice(document["activeDevice"]);
+    return data.activeDevice;
   }
 
   void setActiveDevice(Device device)
   {
-    document["activeDevice"] = mapToJson(device);
-    serialize();
+    data.activeDevice = device;
+    commit();
   }
 
   std::vector<Device> getDevices()
   {
-    std::vector<Device> toReturn;
-    for (JsonVariant v : document["devices"].to<JsonArray>())
-    {
-      toReturn.push_back(mapToDevice(v));
-    }
-
-    return toReturn;
+    return std::vector<Device>(data.devices, data.devices + data.count);
   }
 
   void addDevice(Device device)
   {
-    document["devices"].add(mapToJson(device));
-    serialize();
+    data.devices[data.count++] = device;
+    commit();
+  }
+
+  void removeDevice(size_t index)
+  {
+    std::copy(data.devices + index + 1,  // copy everything starting here
+              data.devices + data.count, // and ending here, not including it,
+              data.devices + index);     // to this destination
+    --data.count;
+    commit();
   }
 
 private:
-  void init()
+  void read()
   {
-    document["activeDevice"] = mapToJson(Device());
-    document.createNestedArray("devices");
+    uint32_t version = 0;
+    nvs_get_u32(_nvs_handle, "version", &version);
+    if (version != VERSION)
+      return;
+
+    nvs_get_blob(_nvs_handle, "data", &data, nullptr);
   }
 
-  bool deserialize()
+  void commit()
   {
-    uint8_t output[1024];
-    if (nvs.getBlob("configuration", output, 1024))
-      return false;
-
-    deserializeMsgPack(document, (const uint8_t *)output);
-  }
-
-  bool serialize()
-  {
-    uint8_t output[1024];
-    size_t size = serializeMsgPack(document, output, 1024);
-    nvs.setBlob("configuration", output, size);
-  }
-
-  Device mapToDevice(JsonVariant v)
-  {
-    return Device{
-        .address = v["address"].as<std::string>(),
-        .name = v["name"].as<std::string>()};
-  }
-
-  JsonObject mapToJson(Device d)
-  {
-    JsonObject json;
-    json["address"] = d.address.toString();
-    json["name"] = d.name;
-    return json;
+    nvs_set_blob(_nvs_handle, "data", &data, sizeof(Data));
+    nvs_set_u32(_nvs_handle, "version", VERSION);
   }
 } storage;
 
