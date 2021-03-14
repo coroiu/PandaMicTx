@@ -4,6 +4,8 @@
 #include <string>
 #include <esp_gap_bt_api.h>
 
+#define STR_FORMAT "%02x:%02x:%02x:%02x:%02x:%02x"
+
 class BluetoothAddress
 {
 public:
@@ -16,11 +18,15 @@ public:
     memcpy(&value, &a, ESP_BD_ADDR_LEN);
   }
 
+  BluetoothAddress(const string &s)
+  {
+    sscanf(s.c_str(), STR_FORMAT, value[0], value[1], value[2], value[3], value[4], value[5]);
+  }
+
   string toString()
   {
     char str[18];
-    sprintf(str, "%02x:%02x:%02x:%02x:%02x:%02x",
-            value[0], value[1], value[2], value[3], value[4], value[5]);
+    sprintf(str, STR_FORMAT, value[0], value[1], value[2], value[3], value[4], value[5]);
     return std::string(str);
   }
 };
