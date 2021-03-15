@@ -234,27 +234,24 @@ int32_t dataCallback(uint8_t *data, int32_t len)
   if (visualizer.isActive && samplesRead > 0)
   {
     int16_t *data16 = (int16_t *)data;
-    // double squareSum = 0;
-    // for (int i(0); i < samplesRead; i += 2)
-    // {
-    //   squareSum += pow(max(data16[i], 0), 2);
-    // }
-    // double rootSquareMean = sqrt(squareSum / samplesRead);
-    // visualizer.volume = log(rootSquareMean) / log(65536.0);
+    double minVal(1e8);
+    double maxVal(-1e8);
+    double mean;
 
-    // float maxsample = -1e8, minsample = 1e8;
-    // for (int i = 0; i < samples_read; ++i)
-    // {
-    //   minsample = min(minsample, data16[i] - mean);
-    //   maxsample = max(maxsample, data16[i] - mean);
-    // }
-    // visualizer.volume = (maxsample - minsample) / 65536;
+    for (int i(0); i < samplesRead; i += 2)
+    {
+      mean += data16[i];
+    }
+    mean /= samplesRead;
 
-    // if (visualizer.volume < 0.05)
-    // {
-    //   memset(data, 0, len);
-    //   return read / 2;
-    // }
+    for (int i(0); i < samplesRead; i += 2)
+    {
+      minVal = min(minVal, data16[i] - mean);
+      maxVal = max(maxVal, data16[i] - mean);
+    }
+
+    double dB = log10((maxVal - minVal) / 32768) * 20; // SPL
+    visualizer.volume = min((dB + 65.0) / 65.0, 0.0);
   }
 
   return read / 2;
