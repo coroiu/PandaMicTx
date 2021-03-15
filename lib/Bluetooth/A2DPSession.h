@@ -107,8 +107,8 @@ public:
     ESP_ERROR_CHECK(esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, 0, 0));
 
     // // set discoverable and connectable mode
-    // ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE));
-    ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE));
+    ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE));
+    // ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE));
     // ESP_ERROR_CHECK(esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 20, 0));
     // ESP_ERROR_CHECK(err);
     // ESP_ERROR_CHECK(esp_bt_gap_set_cod());
@@ -203,6 +203,14 @@ private:
     else if (event == ESP_A2D_AUDIO_STATE_EVT)
     {
       ESP_LOGD("", "A2DP audio state: %d; mcc: %d", param->audio_stat.state, param->audio_cfg.mcc);
+      if (param->audio_stat.state == ESP_A2D_AUDIO_STATE_STOPPED || param->audio_stat.state == ESP_A2D_AUDIO_STATE_REMOTE_SUSPEND)
+      {
+        mediaState = MediaState::INACTIVE;
+      }
+      else if (param->audio_stat.state == ESP_A2D_AUDIO_STATE_STARTED)
+      {
+        mediaState = MediaState::ACTIVE;
+      }
     }
     else if (event == ESP_A2D_MEDIA_CTRL_ACK_EVT)
     {

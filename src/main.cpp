@@ -206,17 +206,10 @@ int32_t dataCallback(uint8_t *data, int32_t len)
   // ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, pdMS_TO_TICKS(10)));
   ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, portMAX_DELAY));
 
-  for (int i = 0; i < read / 8; ++i)
-  {
-    data[4 * i + 0] = buffer[8 * i + 6];
-    data[4 * i + 1] = buffer[8 * i + 7];
-    data[4 * i + 2] = buffer[8 * i + 6];
-    data[4 * i + 3] = buffer[8 * i + 7];
-  }
-
   int samples_read = len / 2;
   int16_t *data16 = (int16_t *)data;
   if (visualizer.isActive && samples_read > 0)
+  // if (samples_read > 0)
   {
     float mean = 0;
     for (int i = 0; i < samples_read; ++i)
@@ -232,6 +225,20 @@ int32_t dataCallback(uint8_t *data, int32_t len)
       maxsample = max(maxsample, data16[i] - mean);
     }
     visualizer.volume = (maxsample - minsample) / 65536;
+
+    // if (visualizer.volume < 0.05)
+    // {
+    //   memset(data, 0, len);
+    //   return read / 2;
+    // }
+  }
+
+  for (int i = 0; i < read / 8; ++i)
+  {
+    data[4 * i + 0] = buffer[8 * i + 6];
+    data[4 * i + 1] = buffer[8 * i + 7];
+    data[4 * i + 2] = buffer[8 * i + 6];
+    data[4 * i + 3] = buffer[8 * i + 7];
   }
 
   return read / 2;
