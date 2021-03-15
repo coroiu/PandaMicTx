@@ -7,18 +7,31 @@
 
 typedef std::function<void()> callback_t;
 
+enum CallbackAction
+{
+  Nop = 0,
+  Back
+};
+
 class MenuCommand : public MenuItem
 {
 protected:
   callback_t callback;
+  CallbackAction action;
 
 public:
-  MenuCommand(string label, callback_t callback) : MenuItem(label, ""), callback(callback) {}
+  MenuCommand(string label, callback_t callback, CallbackAction action) : MenuItem(label, ""), callback(callback), action(action) {}
 
   NavigationCommand *activate() override
   {
     callback();
-    return new NopCommand();
+    switch (action)
+    {
+    case CallbackAction::Nop:
+      return new NopCommand();
+    case CallbackAction::Back:
+      return new BackCommand();
+    }
   }
 };
 

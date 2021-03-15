@@ -123,7 +123,12 @@ public:
   void stop()
   {
     keepActive = false;
-    ESP_ERROR_CHECK(esp_a2d_source_disconnect(currentDevice.value));
+
+    if (connectionState == ConnectionState::CONNECTED)
+    {
+      ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_STOP));
+    }
+    // ESP_ERROR_CHECK(esp_a2d_source_disconnect(currentDevice.value));
   }
 
 private:
@@ -215,6 +220,17 @@ private:
     else if (event == ESP_A2D_MEDIA_CTRL_ACK_EVT)
     {
       ESP_LOGD("", "A2DP media ctrl cmd: %d; state: %d", param->media_ctrl_stat.cmd, param->media_ctrl_stat.status);
+      if (param->media_ctrl_stat.cmd == ESP_A2D_MEDIA_CTRL_STOP &&
+          param->media_ctrl_stat.status == ESP_A2D_MEDIA_CTRL_ACK_SUCCESS &&
+          !keepActive)
+      {
+        ESP_LOGI("", "a2dp media stopped successfully, disconnecting...");
+        ESP_ERROR_CHECK(esp_a2d_source_disconnect(currentDevice.value));
+      }
+      else
+      {
+        ESP_LOGI("", "a2dp media stopping...?");
+      }
     }
   }
 

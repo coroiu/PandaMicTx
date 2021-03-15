@@ -23,7 +23,7 @@ public:
     sscanf(s.c_str(), STR_FORMAT, value[0], value[1], value[2], value[3], value[4], value[5]);
   }
 
-  string toString()
+  string toString() const
   {
     char str[18];
     sprintf(str, STR_FORMAT, value[0], value[1], value[2], value[3], value[4], value[5]);

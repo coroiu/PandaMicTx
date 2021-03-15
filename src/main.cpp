@@ -13,6 +13,7 @@
 #include "audio_in.h"
 #include "views/HomeView.h"
 #include "views/PairMenu.h"
+#include "views/DevicesMenu.h"
 #include "views/VolumeVisualizer.h"
 #include "storage/Storage.h"
 
@@ -56,8 +57,8 @@ GlobalTicker powerTicker(5000, []() {
 });
 
 void redraw();
-void startScan();
-void stopScan();
+void start();
+void stop();
 void activateBluetooth();
 void turnOff();
 int32_t dataCallback(uint8_t *data, int32_t len);
@@ -99,10 +100,12 @@ void setup()
   navigation.navigateTo(homeView);
 
   // Menus
+  mainMenu->custom([](Adafruit_GFX *gfx) { return new DevicesMenu(gfx); });
   mainMenu->custom([](Adafruit_GFX *gfx) { return new PairMenu(gfx); });
-  mainMenu->command("Start scan", startScan);
-  mainMenu->command("Stop scan", stopScan);
-  mainMenu->command("Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
+  mainMenu->command("Disconnect", stop, CallbackAction::Back);
+  // mainMenu->command("Connect", stop);
+  // mainMenu->command(
+  //     "Toggle LED", []() { digitalWrite(BUILTIN_LED, !digitalRead(BUILTIN_LED)); });
   Menu *infoMenu = mainMenu->subMenu("Dev Inf", "Device information");
   batteryInfo = infoMenu->info("Battery: ?");
   cpuInfo = infoMenu->info("CPU: ?");
@@ -122,6 +125,8 @@ void setup()
   // Initializations
   activateBluetooth();
   audio_init();
+
+  aSession.start(storage.getActiveDevice().address);
 }
 
 void redraw()
@@ -174,10 +179,8 @@ void activateBluetooth()
   }
 }
 
-void startScan()
+void start()
 {
-  ESP_LOGD(LOG_TAG, "Running test command...");
-
   if (aSession.start(testDevice))
   {
     audio_start();
@@ -185,15 +188,19 @@ void startScan()
   }
 }
 
-void stopScan()
+void stop()
 {
-  // session.stop();
-  audio_stop();
+  aSession.stop();
+  vTaskDelay(pdMS_TO_TICKS(150));
+  // audio_stop();
   // print = false;
 }
 
 void turnOff()
 {
+  stop();
+  audio_stop();
+  audio_deinit();
   bluetooth.disable();
   display.ssd1306_command(SSD1306_DISPLAYOFF);
   esp_deep_sleep_start();
@@ -202,6 +209,9 @@ void turnOff()
 uint8_t buffer[2048];
 int32_t dataCallback(uint8_t *data, int32_t len)
 {
+  if (len <= 0 || data == nullptr)
+    return 0;
+
   size_t read;
   // ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, pdMS_TO_TICKS(10)));
   ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, portMAX_DELAY));

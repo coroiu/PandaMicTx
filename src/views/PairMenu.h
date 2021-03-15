@@ -13,7 +13,7 @@ class PairMenu : public Menu
 public:
   PairMenu(Adafruit_GFX *gfx) : Menu(gfx, "Scan for new device", "Pairing")
   {
-    session.onNewDevice([&](DeviceInformation device) {
+    session.onNewDevice([=](DeviceInformation device) {
       this->custom([&](Adafruit_GFX *gfx) {
         return new PairCommand(device.name + " (" + device.address.toString() + ")", device);
       });

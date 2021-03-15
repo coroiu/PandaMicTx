@@ -98,9 +98,9 @@ public:
     return menu;
   }
 
-  void command(string label, callback_t callback)
+  void command(string label, callback_t callback, CallbackAction action = CallbackAction::Nop)
   {
-    MenuCommand *command = new MenuCommand(label, callback);
+    MenuCommand *command = new MenuCommand(label, callback, action);
     menuItems.push_back(command);
     notifyChanged();
   }
