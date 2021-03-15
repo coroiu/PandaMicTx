@@ -131,6 +131,16 @@ public:
     // ESP_ERROR_CHECK(esp_a2d_source_disconnect(currentDevice.value));
   }
 
+  void pause()
+  {
+    ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_SUSPEND));
+  }
+
+  void resume()
+  {
+    ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_START));
+  }
+
 private:
   // This is how the BT Stack communicates device and connection information to us.
   void bt_gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)

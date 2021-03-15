@@ -70,7 +70,7 @@ public:
 
   virtual NavigationCommand *input(int key)
   {
-    if (!screenActive)
+    if (!screenActive && key != KEY_A)
     {
       screenOn();
       return new NopCommand();
@@ -79,6 +79,21 @@ public:
     screenTicker.start();
     switch (key)
     {
+    case KEY_A:
+      if (aSession->connectionState == A2DPSession::ConnectionState::CONNECTED)
+      {
+        if (aSession->mediaState == A2DPSession::MediaState::INACTIVE)
+        {
+          aSession->resume();
+          digitalWrite(LED_BUILTIN, HIGH);
+        }
+        else
+        {
+          aSession->pause();
+          digitalWrite(LED_BUILTIN, LOW);
+        }
+      }
+      return new NopCommand();
     case KEY_B:
       return new NavigateToCommand(mainMenu);
     case KEY_C:
@@ -127,8 +142,11 @@ private:
 
   void drawSidebar()
   {
-    sidebar.setCursor(0, CHAR_HEIGHT);
-    sidebar.print("M");
+    if (aSession->connectionState == A2DPSession::ConnectionState::CONNECTED)
+    {
+      sidebar.setCursor(0, CHAR_HEIGHT);
+      sidebar.print("M");
+    }
 
     sidebar.setCursor(1, (sidebar.height() + CHAR_HEIGHT) / 2);
     sidebar.print("=");

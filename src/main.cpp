@@ -44,18 +44,6 @@ MenuInfo *batteryInfo;
 MenuInfo *cpuInfo;
 VolumeVisalizer visualizer(&display);
 
-GlobalTicker powerTicker(5000, []() {
-  if (!digitalRead(LED_BUILTIN))
-  {
-    digitalWrite(LED_BUILTIN, HIGH);
-    vTaskDelay(pdMS_TO_TICKS(20));
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-
-  if (getBatteryPercentage() < 0.15)
-    digitalWrite(LED_BUILTIN, HIGH);
-});
-
 void redraw();
 void start();
 void stop();
@@ -64,6 +52,24 @@ void turnOff();
 int32_t dataCallback(uint8_t *data, int32_t len);
 
 A2DPSession aSession(dataCallback);
+
+GlobalTicker powerTicker(5000, []() {
+  if (getBatteryPercentage() > 0.15)
+  {
+    if (aSession.connectionState == A2DPSession::ConnectionState::CONNECTED && aSession.mediaState == A2DPSession::MediaState::ACTIVE)
+    {
+      digitalWrite(LED_BUILTIN, HIGH);
+    }
+    else
+    {
+      digitalWrite(LED_BUILTIN, HIGH);
+      vTaskDelay(pdMS_TO_TICKS(20));
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+  }
+  else if (getBatteryPercentage() < 0.15)
+    digitalWrite(LED_BUILTIN, HIGH);
+});
 
 void setup()
 {
@@ -216,39 +222,39 @@ int32_t dataCallback(uint8_t *data, int32_t len)
   // ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, pdMS_TO_TICKS(10)));
   ESP_ERROR_CHECK(i2s_read(I2S_PORT, buffer, len * 2, &read, portMAX_DELAY));
 
-  int samples_read = len / 2;
-  int16_t *data16 = (int16_t *)data;
-  if (visualizer.isActive && samples_read > 0)
-  // if (samples_read > 0)
-  {
-    float mean = 0;
-    for (int i = 0; i < samples_read; ++i)
-    {
-      mean += data16[i];
-    }
-    mean /= samples_read;
-
-    float maxsample = -1e8, minsample = 1e8;
-    for (int i = 0; i < samples_read; ++i)
-    {
-      minsample = min(minsample, data16[i] - mean);
-      maxsample = max(maxsample, data16[i] - mean);
-    }
-    visualizer.volume = (maxsample - minsample) / 65536;
-
-    // if (visualizer.volume < 0.05)
-    // {
-    //   memset(data, 0, len);
-    //   return read / 2;
-    // }
-  }
-
   for (int i = 0; i < read / 8; ++i)
   {
     data[4 * i + 0] = buffer[8 * i + 6];
     data[4 * i + 1] = buffer[8 * i + 7];
     data[4 * i + 2] = buffer[8 * i + 6];
     data[4 * i + 3] = buffer[8 * i + 7];
+  }
+
+  int samplesRead = len / 2;
+  if (visualizer.isActive && samplesRead > 0)
+  {
+    int16_t *data16 = (int16_t *)data;
+    // double squareSum = 0;
+    // for (int i(0); i < samplesRead; i += 2)
+    // {
+    //   squareSum += pow(max(data16[i], 0), 2);
+    // }
+    // double rootSquareMean = sqrt(squareSum / samplesRead);
+    // visualizer.volume = log(rootSquareMean) / log(65536.0);
+
+    // float maxsample = -1e8, minsample = 1e8;
+    // for (int i = 0; i < samples_read; ++i)
+    // {
+    //   minsample = min(minsample, data16[i] - mean);
+    //   maxsample = max(maxsample, data16[i] - mean);
+    // }
+    // visualizer.volume = (maxsample - minsample) / 65536;
+
+    // if (visualizer.volume < 0.05)
+    // {
+    //   memset(data, 0, len);
+    //   return read / 2;
+    // }
   }
 
   return read / 2;

@@ -8,7 +8,7 @@ class VolumeVisalizer : public Drawable
 {
 public:
   bool isActive = false;
-  float volume = 0;
+  double volume = 0;
 
   VolumeVisalizer(Adafruit_GFX *gfx) : Drawable(gfx) {}
 
