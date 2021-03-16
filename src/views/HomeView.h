@@ -40,7 +40,7 @@ public:
         batteryTicker(1000, [&]() { refreshBatteryPercentage(); }),
         refreshTicker(250, [&]() { hasChanged = true; }),
         screenTicker(
-            10000, [&]() { screenOff(); }, 1)
+            30000, [&]() { screenOff(); }, 1)
   {
     sidebar.setFont(&Picopixel);
     canvas.setFont(&Picopixel);

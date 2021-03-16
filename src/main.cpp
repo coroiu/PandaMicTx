@@ -29,7 +29,7 @@ BluetoothAddress testDevice(esp_bd_addr_t{11, 38, 117, 3, 197, 152});
 
 const float ADC_MODIFIER = 3.3 / 4095;
 const float BATTERY_MODIFIER = 2 * (3.45 / 4095);
-Adafruit_SSD1306 display(128, 32, &Wire);
+Adafruit_SSD1306 display(128, 32, &Wire, -1, 800000UL, 100000UL);
 Navigation navigation;
 // BluetoothClient bt;
 
@@ -68,7 +68,7 @@ GlobalTicker powerTicker(5000, []() {
     }
   }
   else if (getBatteryPercentage() < 0.15)
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 });
 
 void setup()
@@ -78,6 +78,7 @@ void setup()
   Serial.begin(115200);
   Serial.println("OLED FeatherWing test");
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C); // Address 0x3C for 128x32
+  ESP_LOGD("", "I2C Freq: %d", Wire.getClock());
   pinMode(MICROPHONE_PIN, INPUT);
   pinMode(BATTERY_PIN, INPUT);
   pinMode(BUILTIN_LED, OUTPUT);
@@ -135,11 +136,15 @@ void setup()
   aSession.start(storage.getActiveDevice().address);
 }
 
+static portMUX_TYPE drawMutex;
 void redraw()
 {
   display.clearDisplay();
   navigation.draw();
+
+  // portENTER_CRITICAL(&drawMutex);
   display.display();
+  // portEXIT_CRITICAL(&drawMutex);
 }
 
 void loop()
@@ -230,28 +235,10 @@ int32_t dataCallback(uint8_t *data, int32_t len)
     data[4 * i + 3] = buffer[8 * i + 7];
   }
 
-  int samplesRead = len / 2;
-  if (visualizer.isActive && samplesRead > 0)
+  if (visualizer.isActive)
   {
-    int16_t *data16 = (int16_t *)data;
-    double minVal(1e8);
-    double maxVal(-1e8);
-    double mean;
-
-    for (int i(0); i < samplesRead; i += 2)
-    {
-      mean += data16[i];
-    }
-    mean /= samplesRead;
-
-    for (int i(0); i < samplesRead; i += 2)
-    {
-      minVal = min(minVal, data16[i] - mean);
-      maxVal = max(maxVal, data16[i] - mean);
-    }
-
-    double dB = log10((maxVal - minVal) / 32768) * 20; // SPL
-    visualizer.volume = min((dB + 65.0) / 65.0, 0.0);
+    memcpy(visualizer.buffer, data, read / 2);
+    visualizer.samples = read / 2;
   }
 
   return read / 2;
