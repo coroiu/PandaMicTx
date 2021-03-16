@@ -7,22 +7,28 @@
 class VolumeVisalizer : public Drawable
 {
 public:
-  GFXcanvas1 canvas;
+  GlobalTicker refreshTicker;
   int32_t samples = 0;
   uint8_t buffer[4096];
   bool isActive = false;
   double volume = 0;
+  bool hasChanged = false;
 
-  VolumeVisalizer(Adafruit_GFX *gfx) : Drawable(gfx), canvas(gfx->width(), gfx->height()) {}
+  VolumeVisalizer(Adafruit_GFX *gfx)
+      : Drawable(gfx),
+        refreshTicker(
+            17, [&]() { calculateVolume(); }, 0, MICROS)
+  {
+    refreshTicker.start();
+  }
 
   virtual bool needsRedraw()
   {
-    return true;
+    return hasChanged;
   }
 
   virtual void draw()
   {
-    calculateVolume();
     int width = gfx->width() * volume;
     gfx->fillScreen(0);
     gfx->fillRect(gfx->width() - width, 0, width, gfx->height(), 1);
@@ -73,6 +79,7 @@ private:
       double dB = log10((maxVal - minVal) / 32768) * 20; // SPL
       volume = max((dB + 65.0) / 65.0, 0.0);
       samples = 0;
+      hasChanged = true;
     }
   }
 };

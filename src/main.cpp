@@ -136,7 +136,7 @@ void setup()
   aSession.start(storage.getActiveDevice().address);
 }
 
-static portMUX_TYPE drawMutex;
+static portMUX_TYPE drawMutex = portMUX_INITIALIZER_UNLOCKED;
 void redraw()
 {
   display.clearDisplay();
