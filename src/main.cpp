@@ -11,6 +11,7 @@
 #include <esp_pm.h>
 #include "constants.h"
 #include "audio_in.h"
+#include "logo.h"
 #include "views/HomeView.h"
 #include "views/PairMenu.h"
 #include "views/DevicesMenu.h"
@@ -71,6 +72,16 @@ GlobalTicker powerTicker(5000, []() {
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
 });
 
+GlobalTicker refreshInfo(5000, []() {
+  char bV[50];
+  sprintf(bV, "Battery: %.2fv", analogRead(BATTERY_PIN) * BATTERY_MODIFIER);
+  batteryInfo->label = string(bV);
+
+  char cI[50];
+  sprintf(cI, "CPU: %dMHz", getCpuFrequencyMhz());
+  cpuInfo->label = string(cI);
+});
+
 void setup()
 {
   // Hardware
@@ -94,11 +105,10 @@ void setup()
   storage.init();
 
   // Display
-  display.display();
-  delay(1000);
   display.setFont(&TomThumb);
   display.setTextColor(SSD1306_WHITE);
   display.clearDisplay();
+  display.drawBitmap(0, 0, LOGO, 128, 32, 1);
   display.display();
 
   // Views
@@ -116,6 +126,11 @@ void setup()
   Menu *infoMenu = mainMenu->subMenu("Dev Inf", "Device information");
   batteryInfo = infoMenu->info("Battery: ?");
   cpuInfo = infoMenu->info("CPU: ?");
+  infoMenu->command("Draw logo", []() {
+    display.clearDisplay();
+    display.drawBitmap(0, 0, LOGO, 128, 32, 1);
+    display.display();
+  });
   mainMenu->command("Turn off", []() { turnOff(); });
 
   // Buttons
@@ -128,22 +143,27 @@ void setup()
 
   // Timers
   powerTicker.start();
+  refreshInfo.start();
 
   // Initializations
   activateBluetooth();
   audio_init();
 
   aSession.start(storage.getActiveDevice().address);
+
+  //Init finished, clear display
+  vTaskDelay(pdMS_TO_TICKS(100));
+  display.clearDisplay();
+  display.display();
 }
 
-static portMUX_TYPE drawMutex = portMUX_INITIALIZER_UNLOCKED;
 void redraw()
 {
+  // static portMUX_TYPE drawMutex = portMUX_INITIALIZER_UNLOCKED;
   display.clearDisplay();
   navigation.draw();
-
-  // portENTER_CRITICAL(&drawMutex);
   display.display();
+  // portENTER_CRITICAL(&drawMutex);
   // portEXIT_CRITICAL(&drawMutex);
 }
 
@@ -157,14 +177,6 @@ void loop()
 
   if (navigation.needsRedraw())
     redraw();
-
-  char bV[50];
-  sprintf(bV, "Battery: %.2fv", analogRead(BATTERY_PIN) * BATTERY_MODIFIER);
-  batteryInfo->label = string(bV);
-
-  char cI[50];
-  sprintf(cI, "CPU: %dMHz", getCpuFrequencyMhz());
-  cpuInfo->label = string(cI);
 
   vTaskDelay(10);
   yield();
