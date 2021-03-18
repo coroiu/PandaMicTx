@@ -13,8 +13,8 @@
 
 #define DS_TAG
 
-// #define SCAN_MODE ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE
-#define SCAN_MODE ESP_BT_SCAN_MODE_NONE
+#define SCAN_MODE ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE
+// #define SCAN_MODE ESP_BT_SCAN_MODE_NONE
 
 class DiscoverySession
 {
@@ -58,9 +58,19 @@ public:
     err = esp_bt_gap_register_callback([](esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param) { DiscoverySession::ActiveSession->bt_api_callback(event, param); });
     ESP_ERROR_CHECK(err);
 
+    // Set default parameters for Secure Simple Pairing
+    esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
+    esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_IO;
+    // esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_NONE;
+    ESP_ERROR_CHECK(esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t)));
+
+    // Legacy PIN
+    ESP_ERROR_CHECK(esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, 0, 0));
+
     // set discoverable and connectable mode
-    err = esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE);
-    ESP_ERROR_CHECK(err);
+    // err = esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE);
+    ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE));
+    ESP_ERROR_CHECK(esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 0x30, 0));
 
     // This function starts Inquiry and Name Discovery
     startInquiry();
@@ -80,6 +90,7 @@ public:
     keepActive = false;
     esp_err_t err = esp_bt_gap_cancel_discovery();
     ESP_ERROR_CHECK(err);
+    ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE));
 
     ESP_LOGD(DS_TAG, "Stopped discovery sesssion.");
     return true;
@@ -224,6 +235,29 @@ private:
           ESP_LOGD(GAP_TAG, "Device discovery stopped.");
         }
       }
+    }
+    else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
+    {
+      if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS)
+      {
+        ESP_LOGI("", "authentication success: %s", param->auth_cmpl.device_name);
+        esp_log_buffer_hex("", param->auth_cmpl.bda, ESP_BD_ADDR_LEN);
+      }
+      else
+      {
+        ESP_LOGE("", "authentication failed, status:%d", param->auth_cmpl.stat);
+      }
+    }
+    else if (event == ESP_BT_GAP_KEY_REQ_EVT)
+    {
+      ESP_LOGI("", "ESP_BT_GAP_KEY_REQ_EVT");
+      // esp_bt_pin_code_t pin_code = {0};
+      // esp_bt_gap_ssp_passkey_reply(param->cfm_req.bda, true, 0);
+    }
+    else if (event == ESP_BT_GAP_CFM_REQ_EVT)
+    {
+      ESP_LOGI("", "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
+      esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
     }
   }
 

@@ -59,6 +59,8 @@ public:
 
     esp_bt_dev_set_device_name(BT_DEVICE_NAME);
 
+    esp_bredr_tx_power_set(ESP_PWR_LVL_N3, ESP_PWR_LVL_P6);
+
     return true;
     // Entry point into application
     // bt_app_gap_start_up();

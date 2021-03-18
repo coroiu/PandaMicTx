@@ -100,14 +100,15 @@ public:
 
     // Set default parameters for Secure Simple Pairing
     esp_bt_sp_param_t param_type = ESP_BT_SP_IOCAP_MODE;
-    esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_IO;
+    // esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_IO;
+    esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_NONE;
     ESP_ERROR_CHECK(esp_bt_gap_set_security_param(param_type, &iocap, sizeof(uint8_t)));
 
     // Legacy PIN
     ESP_ERROR_CHECK(esp_bt_gap_set_pin(ESP_BT_PIN_TYPE_FIXED, 0, 0));
 
     // // set discoverable and connectable mode
-    ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE));
+    // ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_NONE));
     // ESP_ERROR_CHECK(esp_bt_gap_set_scan_mode(ESP_BT_SCAN_MODE_CONNECTABLE_DISCOVERABLE));
     // ESP_ERROR_CHECK(esp_bt_gap_start_discovery(ESP_BT_INQ_MODE_GENERAL_INQUIRY, 20, 0));
     // ESP_ERROR_CHECK(err);
@@ -163,6 +164,11 @@ private:
         ESP_LOGE("", "authentication failed, status:%d", param->auth_cmpl.stat);
       }
     }
+    else if (event == ESP_BT_GAP_KEY_REQ_EVT)
+    {
+      esp_bt_pin_code_t pin_code = {0};
+      esp_bt_gap_ssp_passkey_reply(param->cfm_req.bda, true, 0);
+    }
     else if (event == ESP_BT_GAP_CFM_REQ_EVT)
     {
       ESP_LOGI("", "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
@@ -199,7 +205,10 @@ private:
       {
         connectionState = ConnectionState::CONNECTED;
         ESP_ERROR_CHECK(esp_a2d_media_ctrl(ESP_A2D_MEDIA_CTRL_START));
-        esp_bredr_tx_power_set(ESP_PWR_LVL_N12, ESP_PWR_LVL_N3);
+        esp_power_level_t min;
+        esp_power_level_t max;
+        esp_bredr_tx_power_get(&min, &max);
+        ESP_LOGD("", "A2DP connected, TX power: %d to %d", min, max);
       }
       else if (a2dpConnectionState == ESP_A2D_CONNECTION_STATE_DISCONNECTED)
       {
